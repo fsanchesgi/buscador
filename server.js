@@ -14,17 +14,18 @@ app.get("/buscar", async (req, res) => {
   try {
     const ref = req.query.ref;
     const marca = req.query.marca || "";
-
-    if (!ref) return res.json({ resultados: [] });
-
     const query = `${ref} ${marca} equivalente`;
-    const url = "https://www.google.com/search?q=" + encodeURIComponent(query);
 
-    const googleHtml = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
+    const serpapiUrl = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${process.env.SERPAPI_KEY}`;
+
+    const response = await axios.get(serpapiUrl);
+    res.json({ resultados: response.data.organic_results || [] });
+
+  } catch (err) {
+    res.json({ resultados: [] });
+  }
+});
+
 
     const $ = cheerio.load(googleHtml.data);
     const resultados = [];
