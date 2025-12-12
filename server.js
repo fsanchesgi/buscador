@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
@@ -10,32 +11,43 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.SERPAPI_KEY;
 
-app.use(express.json());
+// Debug da chave
+if (!API_KEY) {
+    console.error("❌ ERRO: A chave da SerpAPI não está definida no .env");
+} else {
+    console.log("✅ SerpAPI KEY carregada com sucesso");
+}
 
-// Configuração para servir arquivos estáticos
+// Caminho para public
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
 
-// ROTA DE BUSCA
+// Rota de busca
 app.get("/api/buscar", async (req, res) => {
     try {
-        const referencia = req.query.referencia;
+        const referencia = req.query.ref;
         const marca = req.query.marca || "";
 
         if (!referencia) {
-            return res.json({ resultados: [], erro: "Referência não informada" });
+            return res.json({ resultados: [], mensagem: "Referência não informada" });
         }
 
         const query = `${referencia} ${marca}`.trim();
-
         const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+
+        console.log(`🔎 Buscando: ${query}`);
+        console.log(`🌐 URL da SerpAPI: ${url}`);
 
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log("🔎 SERPAPI RESPONSE RECEIVED");
-        console.log(JSON.stringify(data, null, 2));
+        // Tratamento de erro da SerpAPI
+        if (data.error) {
+            console.error("❌ Erro da SerpAPI:", data.error);
+            return res.status(400).json({ resultados: [], erro: data.error });
+        }
 
         const resultados = data.organic_results || [];
 
@@ -43,23 +55,23 @@ app.get("/api/buscar", async (req, res) => {
             return res.json({ resultados: [], mensagem: "Nada encontrado" });
         }
 
-        // Retorno formatado
+        // Mapear resultados essenciais
         const retorno = resultados.map(r => ({
-            titulo: r.title || "",
+            codigo: r.title || "",
+            titulo: r.snippet || "",
             link: r.link || "",
-            snippet: r.snippet || "",
-            fonte: r.source || ""
+            site: r.source || ""
         }));
 
         res.json({ resultados: retorno });
 
     } catch (error) {
-        console.error("Erro na API:", error);
-        res.status(500).json({ erro: "Erro interno no servidor" });
+        console.error("❌ Erro interno no servidor:", error);
+        res.status(500).json({ resultados: [], erro: "Erro interno no servidor" });
     }
 });
 
-// INICIAR SERVIDOR
+// Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
