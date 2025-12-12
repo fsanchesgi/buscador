@@ -21,13 +21,24 @@ app.get("/buscar", async (req, res) => {
     const query = `${ref} ${marca} equivalente`;
 
     const serpapiUrl =
-      `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${process.env.SERPAPI_KEY}`;
+      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${process.env.SERPAPI_KEY}`;
+
+    console.log("➡ Acessando:", serpapiUrl);
 
     const response = await axios.get(serpapiUrl);
+
+    console.log("➡ SerpAPI retornou:", response.data.organic_results?.length, "resultados");
 
     return res.json({
       resultados: response.data.organic_results || []
     });
+
+  } catch (err) {
+    console.error("❌ Erro na busca:", err);
+    return res.json({ resultados: [] });
+  }
+});
+
 
   } catch (err) {
     console.error("Erro na busca:", err);
