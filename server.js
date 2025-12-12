@@ -12,11 +12,10 @@ const API_KEY = process.env.SERPAPI_KEY;
 
 app.use(express.json());
 
-// Permitir frontend
+// Configuração para servir arquivos estáticos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
-
 
 // ROTA DE BUSCA
 app.get("/api/buscar", async (req, res) => {
@@ -25,7 +24,7 @@ app.get("/api/buscar", async (req, res) => {
         const marca = req.query.marca || "";
 
         if (!referencia) {
-            return res.json({ erro: "Referência não informada" });
+            return res.json({ resultados: [], erro: "Referência não informada" });
         }
 
         const query = `${referencia} ${marca}`.trim();
@@ -36,16 +35,15 @@ app.get("/api/buscar", async (req, res) => {
         const data = await response.json();
 
         console.log("🔎 SERPAPI RESPONSE RECEIVED");
-        console.log(JSON.stringify(data, null, 2)); // DEBUG
+        console.log(JSON.stringify(data, null, 2));
 
-        // Aqui corrigimos: organic_results é onde a SerpAPI devolve resultados reais
         const resultados = data.organic_results || [];
 
         if (resultados.length === 0) {
             return res.json({ resultados: [], mensagem: "Nada encontrado" });
         }
 
-        // Filtrar apenas os essenciais
+        // Retorno formatado
         const retorno = resultados.map(r => ({
             titulo: r.title || "",
             link: r.link || "",
