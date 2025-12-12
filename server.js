@@ -6,7 +6,7 @@ const path = require("path");
 const app = express();
 app.use(cors());
 
-// Servir o index.html
+// Servir o index.html automaticamente
 app.use(express.static(path.join(__dirname)));
 
 app.get("/buscar", async (req, res) => {
@@ -33,15 +33,8 @@ app.get("/buscar", async (req, res) => {
       resultados: response.data.organic_results || []
     });
 
-  } catch (err) {
-    console.error("❌ Erro na busca:", err);
-    return res.json({ resultados: [] });
-  }
-});
-
-
-  } catch (err) {
-    console.error("Erro na busca:", err);
+  } catch (error) {
+    console.error("❌ Erro na busca:", error);
     return res.json({ resultados: [] });
   }
 });
