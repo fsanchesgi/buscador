@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Buscador Automático de Equivalências</title>
+<style>
+  body { font-family: Arial; max-width: 900px; margin: 20px auto; }
+  input, button { width: 100%; margin-top: 10px; padding: 12px; border-radius: 6px; border: 1px solid #ccc; }
+  .card { border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<h1>Buscador Automático de Equivalências</h1>
+<p>Digite a marca e a referência. O sistema busca automaticamente na internet.</p>
+
+<label>Marca (opcional)</label>
+<input id="brand" placeholder="Ex: Schneider">
+
+<label>Referência</label>
+<input id="reference" placeholder="Ex: LC1D09">
+
+<button onclick="buscar()">Buscar equivalências</button>
+
+<h2>Resultados</h2>
+<div id="resultados"></div>
+
+<script>
+async function buscar(){
+  const referencia = document.getElementById('reference').value;
+  const marca = document.getElementById('brand').value;
+
+  const div = document.getElementById('resultados');
+  div.innerHTML = "Buscando...";
+
+  const resp = await fetch("/buscar?ref=" + encodeURIComponent(referencia) + "&marca=" + encodeURIComponent(marca));
+  const data = await resp.json();
+
+  div.innerHTML = "";
+
+  if(data.resultados.length === 0){
+    div.innerHTML = "<p>Nada encontrado.</p>";
+    return;
+  }
+
+  data.resultados.forEach(r => {
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `
+      <strong>${r.codigo}</strong><br>
+      Site: ${r.site}<br>
+      Detalhes: ${r.titulo}
+    `;
+    div.appendChild(c);
+  });
+}
+</script>
+
+</body>
+</html>
