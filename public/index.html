@@ -3,54 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador de Equivalências</title>
+    <title>Buscador de Equivalências OEM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        ul {
+            margin-top: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        a {
+            color: blue;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Buscador de Equivalências OEM</h1>
 
-    <label for="ref">Referência:</label>
-    <input type="text" id="ref" placeholder="Ex: 12345">
+    <label for="ref">Referência:</label><br>
+    <input type="text" id="ref" placeholder="Ex: 3645427319"><br>
 
-    <label for="marca">Marca:</label>
-    <input type="text" id="marca" placeholder="Ex: Ford">
+    <label for="marca">Marca:</label><br>
+    <input type="text" id="marca" placeholder="Ex: Mercedes"><br>
 
-    <button onclick="buscar()">Buscar</button>
+    <button>Buscar</button>
 
     <h2>Resultados:</h2>
     <ul id="resultados"></ul>
 
     <script>
-        async function buscar() {
-            const ref = document.getElementById("ref").value.trim();
-            const marca = document.getElementById("marca").value.trim();
+        document.addEventListener("DOMContentLoaded", () => {
+            const button = document.querySelector("button");
+            button.addEventListener("click", async () => {
+                const refInput = document.getElementById("ref");
+                const marcaInput = document.getElementById("marca");
 
-            console.log("Enviando busca:", { ref, marca });
+                const ref = refInput.value.trim();
+                const marca = marcaInput.value.trim();
 
-            if (!ref) {
-                alert("Por favor, informe a referência");
-                return;
-            }
+                console.log("Enviando busca:", { ref, marca });
 
-            const response = await fetch(`/api/buscar?ref=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
-            const data = await response.json();
+                if (!ref) {
+                    alert("Por favor, informe a referência");
+                    return;
+                }
 
-            console.log("Resposta do servidor:", data);
-
-            const ul = document.getElementById("resultados");
-            ul.innerHTML = "";
-
-            if (data.resultados.length === 0) {
-                const li = document.createElement("li");
-                li.textContent = data.mensagem || "Nada encontrado";
-                ul.appendChild(li);
-            } else {
-                data.resultados.forEach(r => {
-                    const li = document.createElement("li");
-                    li.innerHTML = `<strong>${r.codigo}</strong>: ${r.titulo} <a href="${r.link}" target="_blank">${r.link}</a> [${r.site}]`;
-                    ul.appendChild(li);
-                });
-            }
-        }
-    </script>
-</body>
-</html>
+                try {
+                    const response = await fetch(`/api/buscar?ref=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
+                    const data = await response.json();
+                    console.log("Resposta do servidor:", data);
