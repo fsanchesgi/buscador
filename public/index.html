@@ -8,20 +8,60 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            background-color: #f5f5f5;
         }
-        input, button {
-            margin: 5px 0;
-            padding: 5px;
+        h1 {
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+        }
+        input {
+            margin: 5px 0 15px 0;
+            padding: 8px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         ul {
             margin-top: 20px;
+            padding: 0;
+            list-style-type: none;
         }
         li {
+            background-color: white;
             margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         a {
-            color: blue;
+            color: #007bff;
             text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .codigo {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .site {
+            font-size: 12px;
+            color: #555;
         }
     </style>
 </head>
@@ -58,8 +98,7 @@
                 }
 
                 try {
-                    const baseUrl = window.location.origin; 
-                    // Alterado para enviar 'referencia' conforme server.js
+                    const baseUrl = window.location.origin;
                     const response = await fetch(`${baseUrl}/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
                     const data = await response.json();
 
@@ -70,21 +109,4 @@
 
                     if (data.resultados.length === 0) {
                         const li = document.createElement("li");
-                        li.textContent = data.mensagem || "Nada encontrado";
-                        ul.appendChild(li);
-                    } else {
-                        data.resultados.forEach(r => {
-                            const li = document.createElement("li");
-                            li.innerHTML = `<strong>${r.codigo}</strong>: ${r.titulo} <a href="${r.link}" target="_blank">${r.link}</a> [${r.site}]`;
-                            ul.appendChild(li);
-                        });
-                    }
-                } catch (error) {
-                    console.error("Erro ao buscar:", error);
-                    alert("Erro ao buscar. Veja o console.");
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+                        li.textContent = data.men
