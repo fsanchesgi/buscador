@@ -27,7 +27,8 @@ app.use(express.json());
 // Rota de busca
 app.get("/api/buscar", async (req, res) => {
     try {
-        const referencia = req.query.ref;
+        // Corrigido para 'referencia' conforme query enviada pelo front-end
+        const referencia = req.query.referencia;
         const marca = req.query.marca || "";
 
         console.log("📥 Query recebida:", req.query);
