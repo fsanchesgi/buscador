@@ -1,30 +1,56 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Buscador Automático de Equivalências</title>
-<style>
-  body { font-family: Arial; max-width: 900px; margin: 20px auto; }
-  input, button { width: 100%; margin-top: 10px; padding: 12px; border-radius: 6px; border: 1px solid #ccc; }
-  .card { border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin: 10px 0; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Equivalências</title>
 </head>
 <body>
+    <h1>Buscador de Equivalências OEM</h1>
 
-<h1>Buscador Automático de Equivalências</h1>
-<p>Digite a marca e a referência. O sistema busca automaticamente na internet.</p>
+    <label for="ref">Referência:</label>
+    <input type="text" id="ref" placeholder="Ex: 12345">
 
-<label>Marca (opcional)</label>
-<input id="marca" placeholder="Ex: Schneider">
+    <label for="marca">Marca:</label>
+    <input type="text" id="marca" placeholder="Ex: Ford">
 
-<label>Referência</label>
-<input id="ref" placeholder="Ex: LC1D09">
+    <button onclick="buscar()">Buscar</button>
 
-<button onclick="buscar()">Buscar equivalências</button>
+    <h2>Resultados:</h2>
+    <ul id="resultados"></ul>
 
-<h2>Resultados</h2>
-<div id="resultados"></div>
+    <script>
+        async function buscar() {
+            const ref = document.getElementById("ref").value.trim();
+            const marca = document.getElementById("marca").value.trim();
 
-<script src="script.js"></script>
+            console.log("Enviando busca:", { ref, marca });
+
+            if (!ref) {
+                alert("Por favor, informe a referência");
+                return;
+            }
+
+            const response = await fetch(`/api/buscar?ref=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
+            const data = await response.json();
+
+            console.log("Resposta do servidor:", data);
+
+            const ul = document.getElementById("resultados");
+            ul.innerHTML = "";
+
+            if (data.resultados.length === 0) {
+                const li = document.createElement("li");
+                li.textContent = data.mensagem || "Nada encontrado";
+                ul.appendChild(li);
+            } else {
+                data.resultados.forEach(r => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<strong>${r.codigo}</strong>: ${r.titulo} <a href="${r.link}" target="_blank">${r.link}</a> [${r.site}]`;
+                    ul.appendChild(li);
+                });
+            }
+        }
+    </script>
 </body>
 </html>
