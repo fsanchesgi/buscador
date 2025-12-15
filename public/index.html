@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Buscador de Equivalências OEM</title>
+
+<!-- FAVICON -->
+<link rel="icon" type="image/png" href="/logo.png">
 
 <style>
 :root {
-    --blue-dark: #0c2340;
-    --blue-main: #003a8f;
+    --blue-dark: #0a1f44;
     --gray-bg: #f4f6f8;
     --gray-border: #d9dde3;
     --gray-text: #4b5563;
@@ -24,49 +27,55 @@ body {
     color: #111827;
 }
 
-/* HEADER */
+/* ===== HEADER ===== */
 header {
-    background: #fff;
-    border-bottom: 3px solid var(--blue-main);
+    background: var(--blue-dark);
 }
 .header-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 15px 20px;
+    padding: 14px 20px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
 }
-.header-container img {
-    height: 48px;
+.logo {
+    height: 44px;
 }
 .header-title {
     font-size: 20px;
     font-weight: bold;
-    color: var(--blue-dark);
+    color: #fff;
 }
 
-/* CONTAINER */
+/* ===== CONTAINER ===== */
 .container {
     max-width: 1200px;
-    margin: 30px auto;
+    margin: 35px auto;
     padding: 0 20px;
 }
 
-/* CARD */
+/* ===== CARD ===== */
 .card {
     background: #fff;
     border: 1px solid var(--gray-border);
     border-radius: 4px;
-    padding: 25px;
-    margin-bottom: 25px;
+    padding: 28px;
+    margin-bottom: 28px;
 }
 
-/* FORM */
+/* ===== TITLES ===== */
+h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 17px;
+}
+
+/* ===== FORM ===== */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
-    gap: 15px;
+    gap: 18px;
     align-items: end;
 }
 label {
@@ -76,14 +85,14 @@ label {
     margin-bottom: 6px;
 }
 input {
-    padding: 10px;
+    padding: 11px;
     border: 1px solid var(--gray-border);
     border-radius: 3px;
     font-size: 14px;
 }
 button {
-    padding: 11px 22px;
-    background: var(--blue-main);
+    padding: 12px 26px;
+    background: var(--blue-dark);
     border: none;
     color: #fff;
     font-weight: bold;
@@ -91,21 +100,23 @@ button {
     cursor: pointer;
     border-radius: 3px;
 }
-button:hover { background: #002f73; }
-
-.options {
-    margin-top: 15px;
-    font-size: 14px;
-    display: flex;
-    gap: 20px;
+button:hover {
+    opacity: 0.9;
 }
 
-/* RESULTS */
+.options {
+    margin-top: 18px;
+    font-size: 14px;
+    display: flex;
+    gap: 24px;
+}
+
+/* ===== RESULTADOS ===== */
 .result {
     border: 1px solid var(--gray-border);
-    padding: 16px;
+    padding: 18px;
     border-left: 5px solid transparent;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 .result.exata {
     border-left-color: var(--green);
@@ -118,15 +129,16 @@ button:hover { background: #002f73; }
 .result-desc {
     font-size: 14px;
     color: var(--gray-text);
-    margin: 6px 0;
+    margin: 6px 0 10px;
 }
 .meta {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     font-size: 13px;
+    align-items: center;
 }
 .badge {
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
     font-weight: bold;
     font-size: 12px;
@@ -136,28 +148,31 @@ button:hover { background: #002f73; }
 .exataBadge { background: #ccfbf1; color: #065f46; }
 
 a {
-    color: var(--blue-main);
+    color: var(--blue-dark);
     text-decoration: none;
     font-weight: bold;
 }
 
-/* HISTÓRICO */
+/* ===== HISTÓRICO ===== */
 .history-item {
-    cursor: pointer;
-    padding: 6px 0;
+    padding: 8px 0;
     border-bottom: 1px solid var(--gray-border);
+    cursor: pointer;
     font-size: 14px;
 }
 
-/* INSTITUCIONAL */
+/* ===== INSTITUCIONAL ===== */
 .institucional p {
     font-size: 14px;
     color: var(--gray-text);
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
+/* ===== RESPONSIVO ===== */
 @media (max-width: 768px) {
-    .form-grid { grid-template-columns: 1fr; }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 </head>
@@ -166,33 +181,26 @@ a {
 
 <header>
     <div class="header-container">
-        <img src="https://chatgpt.com/backend-api/estuary/content?id=file_00000000d238720e957d0b2c2c3f19ae" alt="Logo">
+        <img src="/logo.png" class="logo" alt="Buscador de Equivalências OEM">
         <div class="header-title">Buscador de Equivalências OEM</div>
     </div>
 </header>
 
 <div class="container">
 
-<!-- INSTITUCIONAL -->
 <div class="card institucional">
 <h3>Sobre a Plataforma</h3>
 <p>
-Este site foi desenvolvido com o objetivo de auxiliar profissionais do setor automotivo,
-compras, engenharia, manutenção e logística na busca por referências OEM e equivalências
-disponíveis publicamente na internet.
+Este site foi desenvolvido para auxiliar profissionais na busca por referências OEM
+e equivalências disponíveis publicamente na internet, organizando informações técnicas
+de forma clara e objetiva.
 </p>
 <p>
-A plataforma realiza consultas automatizadas em fontes abertas, catálogos técnicos,
-documentações públicas e fichas técnicas, organizando as informações de forma clara,
-objetiva e profissional.
-</p>
-<p>
-Não possuímos vínculo com fabricantes ou distribuidores. As informações apresentadas
-são de caráter informativo e devem sempre ser validadas junto ao fornecedor oficial.
+As informações apresentadas são obtidas a partir de fontes abertas e devem ser
+sempre validadas junto ao fabricante ou fornecedor oficial.
 </p>
 </div>
 
-<!-- BUSCA -->
 <div class="card">
 <div class="form-grid">
     <div>
@@ -212,13 +220,11 @@ são de caráter informativo e devem sempre ser validadas junto ao fornecedor of
 </div>
 </div>
 
-<!-- RESULTADOS -->
 <div class="card">
 <h3>Resultados</h3>
 <div id="resultados"></div>
 </div>
 
-<!-- HISTÓRICO -->
 <div class="card">
 <h3>Histórico de Buscas</h3>
 <div id="historico"></div>
@@ -265,8 +271,7 @@ document.getElementById("buscar").onclick = async () => {
     const div = document.getElementById("resultados");
     div.innerHTML = "Buscando...";
 
-    const url = `/api/buscar?marca=${encodeURIComponent(marca)}&referencia=${encodeURIComponent(referencia)}&somentePdf=${somentePdf}`;
-    const res = await fetch(url);
+    const res = await fetch(`/api/buscar?marca=${encodeURIComponent(marca)}&referencia=${encodeURIComponent(referencia)}&somentePdf=${somentePdf}`);
     const data = await res.json();
 
     div.innerHTML = "";
