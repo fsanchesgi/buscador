@@ -11,6 +11,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.SERPAPI_KEY;
 
+// =====================
+// Utilitário de normalização
+// =====================
+function normalizar(texto = "") {
+    return texto
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+}
+
 // Debug da chave
 if (!API_KEY) {
     console.error("❌ ERRO: A chave da SerpAPI não está definida");
@@ -24,10 +33,11 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
+// =====================
 // Rota de busca
+// =====================
 app.get("/api/buscar", async (req, res) => {
     try {
-        // Corrigido para 'referencia' conforme query enviada pelo front-end
         const referencia = req.query.referencia;
         const marca = req.query.marca || "";
 
@@ -46,52 +56,77 @@ app.get("/api/buscar", async (req, res) => {
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log("📄 Resposta completa da SerpAPI:", JSON.stringify(data, null, 2));
+        console.log("📄 Resposta completa da SerpAPI recebida");
 
         if (data.error) {
             console.error("❌ Erro da SerpAPI:", data.error);
             return res.status(400).json({ resultados: [], erro: data.error });
         }
 
-        // Extrair resultados de qualquer fonte disponível
+        // =====================
+        // Coleta de resultados brutos
+        // =====================
         let resultados = [];
 
         if (data.organic_results && data.organic_results.length > 0) {
             resultados = data.organic_results;
-        } else if (data.answer_box && data.answer_box.answer) {
-            resultados = [{
-                codigo: "Resposta direta",
-                titulo: data.answer_box.answer,
-                link: "",
-                site: "SerpAPI Answer Box"
-            }];
-        } else if (data.related_questions && data.related_questions.length > 0) {
-            resultados = data.related_questions.map(r => ({
-                codigo: r.question || "",
-                titulo: r.answer || "",
-                link: r.link || "",
-                site: "Google Related Questions"
-            }));
-        } else if (data.knowledge_graph) {
-            resultados = [{
-                codigo: data.knowledge_graph.name || "Informação",
-                titulo: data.knowledge_graph.detailed_description || "",
-                link: data.knowledge_graph.url || "",
-                site: "Knowledge Graph"
-            }];
         }
 
         if (resultados.length === 0) {
-            return res.json({ resultados: [], mensagem: "Nada encontrado" });
+            return res.json({
+                resultados: [],
+                mensagem: "Nada encontrado na busca inicial"
+            });
         }
 
-        // Mapear resultados essenciais
-        const retorno = resultados.map(r => ({
-            codigo: r.title || r.codigo || "",
-            titulo: r.snippet || r.titulo || "",
-            link: r.link || "",
-            site: r.source || r.site || ""
-        }));
+        // =====================
+        // Normalização de entrada
+        // =====================
+        const refNorm = normalizar(referencia);
+        const marcaNorm = normalizar(marca);
+
+        console.log("🔎 Referência normalizada:", refNorm);
+        console.log("🏷️ Marca normalizada:", marcaNorm);
+
+        // =====================
+        // Mapeamento + filtro por vínculo real
+        // =====================
+        const retorno = resultados
+            .map(r => {
+                const codigo = r.title || "";
+                const titulo = r.snippet || "";
+
+                return {
+                    codigo,
+                    titulo,
+                    link: r.link || "",
+                    site: r.source || ""
+                };
+            })
+            .filter(r => {
+                const codigoNorm = normalizar(r.codigo);
+                const tituloNorm = normalizar(r.titulo);
+
+                const vinculoReferencia =
+                    codigoNorm.includes(refNorm) ||
+                    tituloNorm.includes(refNorm);
+
+                const vinculoMarca =
+                    marcaNorm
+                        ? codigoNorm.includes(marcaNorm) || tituloNorm.includes(marcaNorm)
+                        : true;
+
+                return vinculoReferencia && vinculoMarca;
+            });
+
+        console.log(`✅ Resultados após filtro técnico: ${retorno.length}`);
+
+        if (retorno.length === 0) {
+            return res.json({
+                resultados: [],
+                mensagem: "Nenhuma equivalência diretamente vinculada à referência e marca informadas."
+            });
+        }
 
         res.json({ resultados: retorno });
 
@@ -101,7 +136,9 @@ app.get("/api/buscar", async (req, res) => {
     }
 });
 
+// =====================
 // Iniciar servidor
+// =====================
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
