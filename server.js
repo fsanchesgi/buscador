@@ -11,155 +11,152 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.SERPAPI_KEY;
 
-// =====================
-// Cache em memória
-// =====================
-const cache = new Map();
-const CACHE_TTL = 1000 * 60 * 30; // 30 minutos
-
-// =====================
-// Funções utilitárias
-// =====================
-function normalizar(texto = "") {
-    return texto.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function isPDF(url = "") {
-    return url.toLowerCase().endsWith(".pdf");
-}
-
-function agora() {
-    return Date.now();
-}
-
-// =====================
 // Debug da chave
-// =====================
 if (!API_KEY) {
     console.error("❌ ERRO: A chave da SerpAPI não está definida");
 } else {
     console.log("✅ SerpAPI KEY carregada com sucesso");
 }
 
-// =====================
-// Arquivos estáticos
-// =====================
+// Caminho para arquivos estáticos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-// =====================
-// Rota de busca (modo híbrido)
-// =====================
+/* =========================================================
+   ROTA DE BUSCA OEM
+========================================================= */
 app.get("/api/buscar", async (req, res) => {
     try {
         const referencia = req.query.referencia;
         const marca = req.query.marca || "";
-        const somentePdf = req.query.somentePdf === "true";
 
         console.log("📥 Query recebida:", req.query);
 
         if (!referencia) {
-            return res.json({ resultados: [], mensagem: "Referência não informada" });
+            return res.json({
+                original: [],
+                equivalentes: [],
+                mensagem: "Referência não informada"
+            });
         }
 
-        // =====================
-        // Cache
-        // =====================
-        const cacheKey = `${referencia}_${marca}_${somentePdf}`;
-        const cached = cache.get(cacheKey);
-
-        if (cached && agora() - cached.time < CACHE_TTL) {
-            console.log("📦 Retornando resultado do cache");
-            return res.json(cached.data);
-        }
-
-        // =====================
-        // Chamada SerpAPI
-        // =====================
         const query = `${marca} ${referencia}`.trim();
         const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
 
-        console.log(`🔎 Buscando na SerpAPI: ${query}`);
+        console.log(`🔎 Buscando: ${query}`);
+        console.log(`🌐 URL SerpAPI: ${url}`);
 
         const response = await fetch(url);
         const data = await response.json();
 
         if (data.error) {
-            console.error("❌ Erro SerpAPI:", data.error);
-            return res.status(400).json({ resultados: [], erro: data.error });
+            console.error("❌ Erro da SerpAPI:", data.error);
+            return res.status(400).json({
+                original: [],
+                equivalentes: [],
+                erro: data.error
+            });
         }
 
-        if (!data.organic_results || data.organic_results.length === 0) {
-            return res.json({ resultados: [], mensagem: "Nada encontrado" });
+        const organic = data.organic_results || [];
+
+        if (organic.length === 0) {
+            return res.json({
+                original: [],
+                equivalentes: [],
+                mensagem: "Nada encontrado"
+            });
         }
 
-        const refNorm = normalizar(referencia);
+        /* =========================================================
+           NORMALIZAÇÃO OEM
+        ========================================================= */
+        const refNormalizada = referencia
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .toLowerCase();
 
-        // =====================
-        // Mapeamento + enriquecimento
-        // =====================
-        let resultados = data.organic_results.map(r => {
-            const codigo = r.title || "";
-            const descricao = r.snippet || "";
+        const marcaLower = marca.toLowerCase();
+
+        const originais = [];
+        const equivalentes = [];
+
+        organic.forEach(r => {
+            const title = r.title || "";
+            const snippet = r.snippet || "";
             const link = r.link || "";
+            const source = r.source || "";
 
-            const textoCompletoNorm = normalizar(codigo + " " + descricao);
-            const equivalenciaExata = textoCompletoNorm.includes(refNorm);
+            const textoCompleto = `${title} ${snippet}`.toLowerCase();
+            const textoNormalizado = textoCompleto.replace(/[^a-zA-Z0-9]/g, "");
 
-            return {
-                codigo,
-                descricao,
+            const contemReferencia =
+                textoCompleto.includes(referencia.toLowerCase()) ||
+                textoNormalizado.includes(refNormalizada);
+
+            const contemMarca =
+                marcaLower && textoCompleto.includes(marcaLower);
+
+            const item = {
+                codigo: title,
+                titulo: snippet,
                 link,
-                site: r.source || "",
-                tipo: isPDF(link) ? "PDF" : "HTML",
-                equivalenciaExata
+                site: source
             };
+
+            // ORIGINAL: marca + referência exata
+            if (contemReferencia && contemMarca) {
+                originais.push(item);
+            }
+            // EQUIVALENTE: contém referência mas não a marca
+            else if (contemReferencia) {
+                equivalentes.push(item);
+            }
         });
 
-        // =====================
-        // Filtro: somente PDFs
-        // =====================
-        if (somentePdf) {
-            resultados = resultados.filter(r => r.tipo === "PDF");
+        /* =========================================================
+           FALLBACK CONTROLADO
+        ========================================================= */
+        if (originais.length === 0 && equivalentes.length === 0) {
+            organic.slice(0, 10).forEach(r => {
+                equivalentes.push({
+                    codigo: r.title || "",
+                    titulo: r.snippet || "",
+                    link: r.link || "",
+                    site: r.source || ""
+                });
+            });
         }
 
-        // =====================
-        // Ordenação profissional
-        // 1️⃣ PDF primeiro
-        // 2️⃣ Equivalência exata primeiro
-        // =====================
-        resultados.sort((a, b) => {
-            if (a.tipo !== b.tipo) return a.tipo === "PDF" ? -1 : 1;
-            if (a.equivalenciaExata !== b.equivalenciaExata)
-                return a.equivalenciaExata ? -1 : 1;
-            return 0;
+        /* =========================================================
+           FORÇA REFERÊNCIA PESQUISADA NO TOPO
+        ========================================================= */
+        originais.unshift({
+            codigo: referencia,
+            titulo: `Referência pesquisada (${marca || "OEM"})`,
+            link: "",
+            site: "Consulta direta"
         });
 
-        const retornoFinal = { resultados };
-
-        // =====================
-        // Salva no cache
-        // =====================
-        cache.set(cacheKey, {
-            time: agora(),
-            data: retornoFinal
+        res.json({
+            original: originais,
+            equivalentes
         });
-
-        console.log(`✅ ${resultados.length} resultados retornados`);
-
-        res.json(retornoFinal);
 
     } catch (error) {
         console.error("❌ Erro interno no servidor:", error);
-        res.status(500).json({ resultados: [], erro: "Erro interno no servidor" });
+        res.status(500).json({
+            original: [],
+            equivalentes: [],
+            erro: "Erro interno no servidor"
+        });
     }
 });
 
-// =====================
-// Inicialização
-// =====================
+/* =========================================================
+   START SERVER
+========================================================= */
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
