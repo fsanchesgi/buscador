@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buscador de Equivalências OEM</title>
+<title>Buscador OEM</title>
 
 <style>
 body {
@@ -12,7 +12,7 @@ body {
     padding: 20px;
 }
 .container {
-    max-width: 900px;
+    max-width: 1000px;
     margin: auto;
 }
 h1 {
@@ -35,10 +35,13 @@ input {
     border-radius: 4px;
     border: 1px solid #ccc;
 }
+.options {
+    margin-bottom: 15px;
+}
 button {
     background: #0056b3;
     color: #fff;
-    padding: 10px 20px;
+    padding: 10px 25px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -52,6 +55,10 @@ button:hover {
     border-radius: 6px;
     margin-bottom: 12px;
     box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    border-left: 5px solid transparent;
+}
+.result.exata {
+    border-left: 5px solid #198754;
 }
 .codigo {
     font-weight: bold;
@@ -62,13 +69,17 @@ button:hover {
     padding: 4px 8px;
     font-size: 12px;
     border-radius: 4px;
-    margin-top: 5px;
+    margin-top: 6px;
 }
 .badge.pdf {
     background: #dc3545;
     color: #fff;
 }
 .badge.html {
+    background: #0d6efd;
+    color: #fff;
+}
+.badge.exata {
     background: #198754;
     color: #fff;
 }
@@ -91,11 +102,16 @@ a:hover {
     <h1>Buscador de Equivalências OEM</h1>
 
     <div class="search-box">
+        <label>Marca</label>
+        <input id="marca" placeholder="Ex: Volkswagen">
+
         <label>Referência</label>
         <input id="ref" placeholder="Ex: 2S0145863">
 
-        <label>Marca / Informação complementar</label>
-        <input id="marca" placeholder="Ex: Volkswagen">
+        <div class="options">
+            <input type="checkbox" id="somentePdf">
+            <label for="somentePdf">Mostrar somente fichas técnicas (PDF)</label>
+        </div>
 
         <button onclick="buscar()">Buscar</button>
     </div>
@@ -105,38 +121,49 @@ a:hover {
 
 <script>
 async function buscar() {
-    const ref = document.getElementById("ref").value.trim();
     const marca = document.getElementById("marca").value.trim();
-    const resultadosDiv = document.getElementById("resultados");
+    const ref = document.getElementById("ref").value.trim();
+    const somentePdf = document.getElementById("somentePdf").checked;
 
-    resultadosDiv.innerHTML = "🔎 Buscando...";
+    const resultadosDiv = document.getElementById("resultados");
+    resultadosDiv.innerHTML = "🔎 Buscando resultados...";
 
     if (!ref) {
         alert("Informe a referência");
         return;
     }
 
-    const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
+    let url = `/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`;
+
+    if (somentePdf) {
+        url += "&somentePdf=true";
+    }
+
+    const response = await fetch(url);
     const data = await response.json();
 
     resultadosDiv.innerHTML = "";
 
     if (!data.resultados || data.resultados.length === 0) {
-        resultadosDiv.innerHTML = "<p>Nenhuma equivalência encontrada.</p>";
+        resultadosDiv.innerHTML = "<p>Nenhum resultado encontrado.</p>";
         return;
     }
 
     data.resultados.forEach(r => {
         const div = document.createElement("div");
-        div.className = "result";
+        div.className = "result" + (r.equivalenciaExata ? " exata" : "");
 
         div.innerHTML = `
             <div class="codigo">🔢 ${r.codigo}</div>
-            <div>🏷️ ${r.descricao || "Descrição não disponível"}</div>
+            <div>${r.descricao || "Descrição não disponível"}</div>
+
+            ${r.equivalenciaExata ? '<span class="badge exata">⭐ Equivalência exata</span><br>' : ''}
+
             <span class="badge ${r.tipo === "PDF" ? "pdf" : "html"}">
                 ${r.tipo === "PDF" ? "📄 Ficha técnica (PDF)" : "🌐 Página Web"}
             </span><br><br>
-            <a href="${r.link}" target="_blank">🔗 Acessar documento</a><br>
+
+            <a href="${r.link}" target="_blank">🔗 Acessar</a><br>
             <span class="site">${r.site}</span>
         `;
 
