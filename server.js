@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
@@ -11,119 +10,77 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.SERPAPI_KEY;
 
-// Debug da chave
-if (!API_KEY) {
-    console.error("❌ ERRO: A chave da SerpAPI não está definida");
-} else {
-    console.log("✅ SerpAPI KEY carregada com sucesso");
-}
+if (!API_KEY) console.error("❌ ERRO: Chave SerpAPI não definida");
 
-// Caminho para arquivos estáticos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-// ===============================
-// CACHE EM MEMÓRIA (5 MINUTOS)
-// ===============================
-const cache = new Map(); // chave: referencia+marca, valor: { data, timestamp }
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+// Cache simples
+const cache = new Map();
 
-function normalizeRef(ref) {
-    return ref.toUpperCase().replace(/[\s.\-"]/g, "");
-}
-
-// ===============================
-// ROTA DE BUSCA
-// ===============================
 app.get("/api/buscar", async (req, res) => {
     try {
         const referencia = req.query.referencia;
         const marca = req.query.marca || "";
 
-        if (!referencia) {
-            return res.json({ resultados: [], mensagem: "Referência não informada" });
-        }
+        if (!referencia) return res.json({ resultados: [], mensagem: "Referência não informada" });
 
-        const queryKey = `${normalizeRef(referencia)}|${marca.toUpperCase()}`;
+        // Normalizar referência
+        const cleanRef = referencia.replace(/[\s.-]/g, "").toLowerCase();
+        const query = `${referencia} ${marca}`.trim();
+        const cacheKey = query.toLowerCase();
 
-        // Verificar cache
-        if (cache.has(queryKey)) {
-            const cached = cache.get(queryKey);
-            if (Date.now() - cached.timestamp < CACHE_DURATION) {
-                console.log("♻️ Retornando do cache:", queryKey);
+        if (cache.has(cacheKey)) {
+            const cached = cache.get(cacheKey);
+            if (Date.now() - cached.timestamp < 5 * 60 * 1000) {
                 return res.json(cached.data);
             }
         }
 
-        // Consulta SerpAPI
-        const query = `${referencia} ${marca}`.trim();
         const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
-
-        console.log(`🔎 Buscando: ${query}`);
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.error) {
-            return res.status(400).json({ resultados: [], erro: data.error });
-        }
+        if (data.error) return res.status(400).json({ resultados: [], erro: data.error });
 
-        // ===============================
-        // EXTRAI RESULTADOS ORIGINAIS, EQUIVALENTES E PDFS
-        // ===============================
         let originais = [];
         let equivalentes = [];
         let pdfs = [];
 
-        const refNorm = normalizeRef(referencia);
-
         if (data.organic_results && data.organic_results.length > 0) {
             data.organic_results.forEach(r => {
-                const titleNorm = normalizeRef(r.title || "");
-                const snippetNorm = normalizeRef(r.snippet || "");
+                const tituloLower = (r.title || "").toLowerCase();
+                const snippetLower = (r.snippet || "").toLowerCase();
 
+                const hasRef = tituloLower.includes(cleanRef) || snippetLower.includes(cleanRef);
                 const isPDF = r.link && r.link.toLowerCase().endsWith(".pdf");
 
-                const resultObj = {
-                    codigo: r.title || r.snippet || "",
+                const item = {
+                    codigo: r.title || "Sem título",
                     titulo: r.snippet || "",
                     link: r.link || "",
-                    marca: marca,
                     site: r.source || ""
                 };
 
-                if (isPDF) {
-                    pdfs.push(resultObj);
-                } else if (titleNorm.includes(refNorm) || snippetNorm.includes(refNorm)) {
-                    if (titleNorm === refNorm || snippetNorm === refNorm) {
-                        originais.push(resultObj); // exato
-                    } else {
-                        equivalentes.push(resultObj); // contém a referência
-                    }
-                }
+                if (isPDF) pdfs.push(item);
+                else if (hasRef) originais.push(item);
+                else equivalentes.push(item);
             });
         }
 
-        // Ordenar: originais > equivalentes > PDFs
-        const resultados = [...originais, ...equivalentes, ...pdfs];
+        const resultados = [...originais, ...pdfs, ...equivalentes];
 
         const retorno = { resultados };
-
-        // Salvar no cache
-        cache.set(queryKey, { data: retorno, timestamp: Date.now() });
+        cache.set(cacheKey, { data: retorno, timestamp: Date.now() });
 
         res.json(retorno);
 
     } catch (error) {
-        console.error("❌ Erro interno no servidor:", error);
+        console.error(error);
         res.status(500).json({ resultados: [], erro: "Erro interno no servidor" });
     }
 });
 
-// ===============================
-// INICIAR SERVIDOR
-// ===============================
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
