@@ -15,9 +15,7 @@
     --green: #0f766e;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
@@ -26,12 +24,11 @@ body {
     color: #111827;
 }
 
-/* ===== HEADER ===== */
+/* HEADER */
 header {
     background: #fff;
     border-bottom: 3px solid var(--blue-main);
 }
-
 .header-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -40,25 +37,23 @@ header {
     align-items: center;
     gap: 20px;
 }
-
 .header-container img {
     height: 48px;
 }
-
 .header-title {
     font-size: 20px;
     font-weight: bold;
     color: var(--blue-dark);
 }
 
-/* ===== CONTAINER ===== */
+/* CONTAINER */
 .container {
     max-width: 1200px;
     margin: 30px auto;
     padding: 0 20px;
 }
 
-/* ===== CARD ===== */
+/* CARD */
 .card {
     background: #fff;
     border: 1px solid var(--gray-border);
@@ -67,29 +62,25 @@ header {
     margin-bottom: 25px;
 }
 
-/* ===== FORM ===== */
+/* FORM */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
     gap: 15px;
     align-items: end;
 }
-
 label {
     font-size: 13px;
     font-weight: bold;
     color: var(--gray-text);
     margin-bottom: 6px;
 }
-
 input {
-    width: 100%;
     padding: 10px;
     border: 1px solid var(--gray-border);
     border-radius: 3px;
     font-size: 14px;
 }
-
 button {
     padding: 11px 22px;
     background: var(--blue-main);
@@ -100,54 +91,46 @@ button {
     cursor: pointer;
     border-radius: 3px;
 }
-
-button:hover {
-    background: #002f73;
-}
+button:hover { background: #002f73; }
 
 .options {
     margin-top: 15px;
     font-size: 14px;
+    display: flex;
+    gap: 20px;
 }
 
-/* ===== RESULTS ===== */
+/* RESULTS */
 .result {
     border: 1px solid var(--gray-border);
     padding: 16px;
     border-left: 5px solid transparent;
     margin-bottom: 12px;
 }
-
 .result.exata {
     border-left-color: var(--green);
     background: #f0fdfa;
 }
-
 .result-title {
     font-weight: bold;
     font-size: 15px;
-    margin-bottom: 5px;
 }
-
 .result-desc {
     font-size: 14px;
     color: var(--gray-text);
-    margin-bottom: 8px;
+    margin: 6px 0;
 }
-
 .meta {
     display: flex;
     gap: 12px;
     font-size: 13px;
 }
-
 .badge {
     padding: 3px 8px;
     border-radius: 12px;
     font-weight: bold;
     font-size: 12px;
 }
-
 .pdf { background: #e0e7ff; color: #1e3a8a; }
 .html { background: #f3f4f6; color: #374151; }
 .exataBadge { background: #ccfbf1; color: #065f46; }
@@ -158,10 +141,23 @@ a {
     font-weight: bold;
 }
 
+/* HISTÓRICO */
+.history-item {
+    cursor: pointer;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--gray-border);
+    font-size: 14px;
+}
+
+/* INSTITUCIONAL */
+.institucional p {
+    font-size: 14px;
+    color: var(--gray-text);
+    line-height: 1.6;
+}
+
 @media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
+    .form-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -177,48 +173,100 @@ a {
 
 <div class="container">
 
-    <div class="card">
-        <div class="form-grid">
-            <div>
-                <label>Marca</label>
-                <input id="marca" placeholder="Ex: Volkswagen, Mercedes-Benz">
-            </div>
-            <div>
-                <label>Referência</label>
-                <input id="referencia" placeholder="Ex: 2S0145863">
-            </div>
-            <button id="buscar">Buscar</button>
-        </div>
+<!-- INSTITUCIONAL -->
+<div class="card institucional">
+<h3>Sobre a Plataforma</h3>
+<p>
+Este site foi desenvolvido com o objetivo de auxiliar profissionais do setor automotivo,
+compras, engenharia, manutenção e logística na busca por referências OEM e equivalências
+disponíveis publicamente na internet.
+</p>
+<p>
+A plataforma realiza consultas automatizadas em fontes abertas, catálogos técnicos,
+documentações públicas e fichas técnicas, organizando as informações de forma clara,
+objetiva e profissional.
+</p>
+<p>
+Não possuímos vínculo com fabricantes ou distribuidores. As informações apresentadas
+são de caráter informativo e devem sempre ser validadas junto ao fornecedor oficial.
+</p>
+</div>
 
-        <div class="options">
-            <label>
-                <input type="checkbox" id="somentePdf"> Somente PDFs
-            </label>
-        </div>
+<!-- BUSCA -->
+<div class="card">
+<div class="form-grid">
+    <div>
+        <label>Marca</label>
+        <input id="marca" placeholder="Ex: Volkswagen, Mercedes-Benz">
     </div>
+    <div>
+        <label>Referência</label>
+        <input id="referencia" placeholder="Ex: 2S0145863">
+    </div>
+    <button id="buscar">Buscar</button>
+</div>
 
-    <div class="card">
-        <h3>Resultados</h3>
-        <div id="resultados"></div>
-    </div>
+<div class="options">
+    <label><input type="checkbox" id="somentePdf"> Somente PDFs</label>
+    <label><input type="checkbox" id="modoB2B"> Modo B2B</label>
+</div>
+</div>
+
+<!-- RESULTADOS -->
+<div class="card">
+<h3>Resultados</h3>
+<div id="resultados"></div>
+</div>
+
+<!-- HISTÓRICO -->
+<div class="card">
+<h3>Histórico de Buscas</h3>
+<div id="historico"></div>
+</div>
 
 </div>
 
 <script>
+const historicoDiv = document.getElementById("historico");
+
+function salvarHistorico(marca, referencia) {
+    let hist = JSON.parse(localStorage.getItem("historico")) || [];
+    hist.unshift({ marca, referencia });
+    hist = hist.slice(0, 10);
+    localStorage.setItem("historico", JSON.stringify(hist));
+    renderHistorico();
+}
+
+function renderHistorico() {
+    historicoDiv.innerHTML = "";
+    const hist = JSON.parse(localStorage.getItem("historico")) || [];
+    hist.forEach(h => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+        div.textContent = `${h.marca} - ${h.referencia}`;
+        div.onclick = () => {
+            document.getElementById("marca").value = h.marca;
+            document.getElementById("referencia").value = h.referencia;
+        };
+        historicoDiv.appendChild(div);
+    });
+}
+
 document.getElementById("buscar").onclick = async () => {
     const marca = document.getElementById("marca").value.trim();
     const referencia = document.getElementById("referencia").value.trim();
     const somentePdf = document.getElementById("somentePdf").checked;
+    const modoB2B = document.getElementById("modoB2B").checked;
 
-    if (!referencia) {
-        alert("Informe a referência");
-        return;
-    }
+    if (!referencia) return alert("Informe a referência");
+
+    salvarHistorico(marca, referencia);
 
     const div = document.getElementById("resultados");
     div.innerHTML = "Buscando...";
 
-    const res = await fetch(`/api/buscar?marca=${encodeURIComponent(marca)}&referencia=${encodeURIComponent(referencia)}&somentePdf=${somentePdf}`);
+    const url = `/api/buscar?marca=${encodeURIComponent(marca)}&referencia=${encodeURIComponent(referencia)}&somentePdf=${somentePdf}`;
+    const res = await fetch(url);
     const data = await res.json();
 
     div.innerHTML = "";
@@ -236,13 +284,15 @@ document.getElementById("buscar").onclick = async () => {
             <div class="result-desc">${r.descricao || ""}</div>
             <div class="meta">
                 <span class="badge ${r.tipo === "PDF" ? "pdf" : "html"}">${r.tipo}</span>
-                ${r.equivalenciaExata ? `<span class="badge exataBadge">Equivalência Exata</span>` : ""}
-                <a href="${r.link}" target="_blank">Abrir</a>
+                ${r.equivalenciaExata ? `<span class="badge exataBadge">Exata</span>` : ""}
+                <a href="${r.link}" target="_blank">${modoB2B ? "Ficha Técnica" : "Abrir"}</a>
             </div>
         `;
         div.appendChild(el);
     });
 };
+
+renderHistorico();
 </script>
 
 </body>
