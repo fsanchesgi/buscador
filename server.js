@@ -11,26 +11,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.SERPAPI_KEY;
 
-// Debug da chave
 if (!API_KEY) {
     console.error("❌ ERRO: A chave da SerpAPI não está definida");
 } else {
     console.log("✅ SerpAPI KEY carregada com sucesso");
 }
 
-// Caminho para arquivos estáticos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-/* =========================================================
-   ROTA DE BUSCA OEM
-========================================================= */
 app.get("/api/buscar", async (req, res) => {
     try {
         const referencia = req.query.referencia;
-        const marca = req.query.marca || "";
+        const marca = (req.query.marca || "").toLowerCase();
 
         console.log("📥 Query recebida:", req.query);
 
@@ -46,14 +41,13 @@ app.get("/api/buscar", async (req, res) => {
         const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
 
         console.log(`🔎 Buscando: ${query}`);
-        console.log(`🌐 URL SerpAPI: ${url}`);
 
         const response = await fetch(url);
         const data = await response.json();
 
         if (data.error) {
-            console.error("❌ Erro da SerpAPI:", data.error);
-            return res.status(400).json({
+            console.error("❌ Erro SerpAPI:", data.error);
+            return res.json({
                 original: [],
                 equivalentes: [],
                 erro: data.error
@@ -70,55 +64,46 @@ app.get("/api/buscar", async (req, res) => {
             });
         }
 
-        /* =========================================================
-           NORMALIZAÇÃO OEM
-        ========================================================= */
-        const refNormalizada = referencia
-            .replace(/[^a-zA-Z0-9]/g, "")
-            .toLowerCase();
+        // Normalização OEM
+        const refNormalizada = referencia.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 
-        const marcaLower = marca.toLowerCase();
-
-        const originais = [];
+        const original = [];
         const equivalentes = [];
 
         organic.forEach(r => {
             const title = r.title || "";
             const snippet = r.snippet || "";
             const link = r.link || "";
-            const source = r.source || "";
+            const site = r.source || "";
 
-            const textoCompleto = `${title} ${snippet}`.toLowerCase();
-            const textoNormalizado = textoCompleto.replace(/[^a-zA-Z0-9]/g, "");
+            const texto = `${title} ${snippet}`.toLowerCase();
+            const textoNormalizado = texto.replace(/[^a-zA-Z0-9]/g, "");
 
-            const contemReferencia =
-                textoCompleto.includes(referencia.toLowerCase()) ||
-                textoNormalizado.includes(refNormalizada);
-
-            const contemMarca =
-                marcaLower && textoCompleto.includes(marcaLower);
+            const matchExato = textoNormalizado.includes(refNormalizada);
+            const matchMarca = marca && texto.includes(marca);
 
             const item = {
                 codigo: title,
                 titulo: snippet,
                 link,
-                site: source
+                site
             };
 
-            // ORIGINAL: marca + referência exata
-            if (contemReferencia && contemMarca) {
-                originais.push(item);
+            // ORIGINAL: referência exata (marca é bônus, não obrigatória)
+            if (matchExato) {
+                original.push(item);
             }
-            // EQUIVALENTE: contém referência mas não a marca
-            else if (contemReferencia) {
+            // EQUIVALENTE: correlação parcial
+            else if (
+                texto.includes(referencia.toLowerCase().slice(0, 5)) ||
+                texto.includes(marca)
+            ) {
                 equivalentes.push(item);
             }
         });
 
-        /* =========================================================
-           FALLBACK CONTROLADO
-        ========================================================= */
-        if (originais.length === 0 && equivalentes.length === 0) {
+        // GARANTIA DE RETORNO
+        if (original.length === 0 && equivalentes.length === 0) {
             organic.slice(0, 10).forEach(r => {
                 equivalentes.push({
                     codigo: r.title || "",
@@ -129,10 +114,8 @@ app.get("/api/buscar", async (req, res) => {
             });
         }
 
-        /* =========================================================
-           FORÇA REFERÊNCIA PESQUISADA NO TOPO
-        ========================================================= */
-        originais.unshift({
+        // Forçar referência pesquisada no topo
+        original.unshift({
             codigo: referencia,
             titulo: `Referência pesquisada (${marca || "OEM"})`,
             link: "",
@@ -140,12 +123,12 @@ app.get("/api/buscar", async (req, res) => {
         });
 
         res.json({
-            original: originais,
+            original,
             equivalentes
         });
 
     } catch (error) {
-        console.error("❌ Erro interno no servidor:", error);
+        console.error("❌ Erro interno:", error);
         res.status(500).json({
             original: [],
             equivalentes: [],
@@ -154,9 +137,6 @@ app.get("/api/buscar", async (req, res) => {
     }
 });
 
-/* =========================================================
-   START SERVER
-========================================================= */
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
