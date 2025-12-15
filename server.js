@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
@@ -10,138 +11,137 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.SERPAPI_KEY;
 
+// Debug
+if (!API_KEY) {
+    console.error("❌ ERRO: SERPAPI_KEY não definida");
+} else {
+    console.log("✅ SerpAPI KEY carregada com sucesso");
+}
+
+// Static
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-// ===============================
-// Utils OEM
-// ===============================
-const normalizeRef = (ref = "") =>
-  ref
-    .toUpperCase()
-    .replace(/[\s\-\.\/]/g, "")
-    .trim();
+/* =========================
+   FUNÇÕES OEM
+========================= */
 
-const isPDF = (link = "") =>
-  link.toLowerCase().endsWith(".pdf") ||
-  link.toLowerCase().includes("scribd") ||
-  link.toLowerCase().includes("catalog");
+// Remove tudo que não for número
+function normalizeRef(ref = "") {
+    return ref.replace(/\D/g, "");
+}
 
-// Extrai possível código do texto
-const extractCode = (text, refNorm) => {
-  if (!text) return "";
-  const clean = text.toUpperCase();
-  if (clean.includes(refNorm)) return refNorm;
-  return "";
-};
+// Cria regex tolerante
+function buildRefRegex(ref) {
+    const clean = normalizeRef(ref);
+    if (!clean) return null;
 
-// ===============================
-// API BUSCA
-// ===============================
+    // aceita ponto, hífen ou nada
+    const pattern = clean.split("").join("[\\.\\-\\s]*");
+    return new RegExp(pattern, "i");
+}
+
+// Detecta PDF
+function isPDF(result) {
+    return (
+        result.link?.toLowerCase().endsWith(".pdf") ||
+        result.snippet?.toLowerCase().includes("pdf")
+    );
+}
+
+// Score OEM
+function scoreResult(result, refRegex, normalizedRef) {
+    const text = `${result.title} ${result.snippet}`.toLowerCase();
+
+    let score = 0;
+
+    if (refRegex && refRegex.test(text)) score += 50;
+    if (text.includes(normalizedRef)) score += 30;
+    if (isPDF(result)) score += 20;
+
+    return score;
+}
+
+/* =========================
+   ROTA DE BUSCA
+========================= */
+
 app.get("/api/buscar", async (req, res) => {
-  try {
-    const marca = (req.query.marca || "").trim();
-    const referencia = (req.query.referencia || "").trim();
+    try {
+        const referencia = req.query.referencia;
+        const marca = req.query.marca || "";
 
-    if (!referencia) {
-      return res.json({
-        original: [],
-        equivalentes: [],
-        pdfs: [],
-        mensagem: "Referência não informada"
-      });
+        console.log("📥 Query recebida:", req.query);
+
+        if (!referencia) {
+            return res.json({ resultados: [], mensagem: "Referência não informada" });
+        }
+
+        const normalizedRef = normalizeRef(referencia);
+        const refRegex = buildRefRegex(referencia);
+
+        const query = `${referencia} ${marca}`.trim();
+        const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+
+        console.log("🔎 Buscando:", query);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.organic_results || data.organic_results.length === 0) {
+            return res.json({ resultados: [], mensagem: "Nada encontrado" });
+        }
+
+        const originals = [];
+        const equivalents = [];
+        const pdfs = [];
+
+        data.organic_results.forEach(r => {
+            const score = scoreResult(r, refRegex, normalizedRef);
+            if (score === 0) return;
+
+            const item = {
+                codigo: referencia,
+                titulo: r.title || "",
+                descricao: r.snippet || "",
+                link: r.link || "",
+                site: r.source || "",
+                pdf: isPDF(r),
+                score
+            };
+
+            if (item.pdf) pdfs.push(item);
+            else if (score >= 50) originals.push(item);
+            else equivalents.push(item);
+        });
+
+        if (
+            originals.length === 0 &&
+            equivalents.length === 0 &&
+            pdfs.length === 0
+        ) {
+            return res.json({ resultados: [], mensagem: "Nada encontrado" });
+        }
+
+        originals.sort((a, b) => b.score - a.score);
+        equivalents.sort((a, b) => b.score - a.score);
+        pdfs.sort((a, b) => b.score - a.score);
+
+        res.json({
+            original: originals,
+            equivalentes: equivalents,
+            pdfs
+        });
+
+    } catch (error) {
+        console.error("❌ Erro interno:", error);
+        res.status(500).json({ erro: "Erro interno no servidor" });
     }
-
-    const refNorm = normalizeRef(referencia);
-    const query = `${referencia} ${marca}`.trim();
-
-    const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
-      query
-    )}&api_key=${API_KEY}`;
-
-    console.log("🔎 Busca:", query);
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.organic_results) {
-      return res.json({
-        original: [],
-        equivalentes: [],
-        pdfs: [],
-        mensagem: "Nada encontrado"
-      });
-    }
-
-    const original = [];
-    const equivalentes = [];
-    const pdfs = [];
-
-    data.organic_results.forEach((r) => {
-      const title = r.title || "";
-      const snippet = r.snippet || "";
-      const link = r.link || "";
-
-      const combined = `${title} ${snippet}`.toUpperCase();
-      const foundNorm = normalizeRef(combined);
-
-      const matchExact =
-        foundNorm.includes(refNorm) &&
-        marca &&
-        combined.includes(marca.toUpperCase());
-
-      const matchEquivalent = foundNorm.includes(refNorm);
-
-      const item = {
-        titulo: title,
-        descricao: snippet,
-        link,
-        site: r.source || "",
-        marca_detectada: marca || "Não informada",
-        codigo: refNorm
-      };
-
-      if (isPDF(link)) {
-        pdfs.push(item);
-      } else if (matchExact) {
-        original.push(item);
-      } else if (matchEquivalent) {
-        equivalentes.push(item);
-      }
-    });
-
-    // Remove duplicados
-    const unique = (arr) =>
-      Array.from(new Map(arr.map(i => [i.link, i])).values());
-
-    res.json({
-      original: unique(original),
-      equivalentes: unique(equivalentes),
-      pdfs: unique(pdfs)
-    });
-
-  } catch (error) {
-    console.error("❌ Erro:", error);
-    res.status(500).json({
-      original: [],
-      equivalentes: [],
-      pdfs: [],
-      erro: "Erro interno no servidor"
-    });
-  }
 });
 
-// ===============================
-// Rota raiz (FIX Cannot GET /)
-// ===============================
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// ===============================
+// Start
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
