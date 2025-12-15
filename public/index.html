@@ -1,303 +1,222 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Buscador de Equivalências OEM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Buscador de Equivalências OEM</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
 
-<!-- FAVICON -->
-<link rel="icon" type="image/png" href="/logo.png">
+    <style>
+        :root {
+            --blue-dark: #0a1f44;
+            --blue-light: #123a78;
+            --gray-bg: #f4f6f8;
+            --gray-border: #d1d5db;
+            --gray-text: #4b5563;
+        }
 
-<style>
-:root {
-    --blue-dark: #0a1f44;
-    --gray-bg: #f4f6f8;
-    --gray-border: #d9dde3;
-    --gray-text: #4b5563;
-    --green: #0f766e;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-* { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
 
-body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: var(--gray-bg);
-    color: #111827;
-}
+        /* HEADER */
+        header {
+            background-color: var(--blue-dark) !important;
+            width: 100%;
+        }
 
-/* ===== HEADER ===== */
-header {
-    background: var(--blue-dark);
-}
-.header-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
-.logo {
-    height: 44px;
-}
-.header-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: #fff;
-}
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
 
-/* ===== CONTAINER ===== */
-.container {
-    max-width: 1200px;
-    margin: 35px auto;
-    padding: 0 20px;
-}
+        .logo {
+            height: 48px;
+            width: auto;
+            display: block;
+            background: transparent;
+        }
 
-/* ===== CARD ===== */
-.card {
-    background: #fff;
-    border: 1px solid var(--gray-border);
-    border-radius: 4px;
-    padding: 28px;
-    margin-bottom: 28px;
-}
+        .header-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
 
-/* ===== TITLES ===== */
-h3 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 17px;
-}
+        /* MAIN */
+        main {
+            max-width: 1200px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
 
-/* ===== FORM ===== */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 18px;
-    align-items: end;
-}
-label {
-    font-size: 13px;
-    font-weight: bold;
-    color: var(--gray-text);
-    margin-bottom: 6px;
-}
-input {
-    padding: 11px;
-    border: 1px solid var(--gray-border);
-    border-radius: 3px;
-    font-size: 14px;
-}
-button {
-    padding: 12px 26px;
-    background: var(--blue-dark);
-    border: none;
-    color: #fff;
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 3px;
-}
-button:hover {
-    opacity: 0.9;
-}
+        .card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
 
-.options {
-    margin-top: 18px;
-    font-size: 14px;
-    display: flex;
-    gap: 24px;
-}
+        h1 {
+            margin-top: 0;
+            font-size: 22px;
+        }
 
-/* ===== RESULTADOS ===== */
-.result {
-    border: 1px solid var(--gray-border);
-    padding: 18px;
-    border-left: 5px solid transparent;
-    margin-bottom: 14px;
-}
-.result.exata {
-    border-left-color: var(--green);
-    background: #f0fdfa;
-}
-.result-title {
-    font-weight: bold;
-    font-size: 15px;
-}
-.result-desc {
-    font-size: 14px;
-    color: var(--gray-text);
-    margin: 6px 0 10px;
-}
-.meta {
-    display: flex;
-    gap: 14px;
-    font-size: 13px;
-    align-items: center;
-}
-.badge {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 12px;
-}
-.pdf { background: #e0e7ff; color: #1e3a8a; }
-.html { background: #f3f4f6; color: #374151; }
-.exataBadge { background: #ccfbf1; color: #065f46; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 16px;
+            margin-top: 16px;
+        }
 
-a {
-    color: var(--blue-dark);
-    text-decoration: none;
-    font-weight: bold;
-}
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-text);
+        }
 
-/* ===== HISTÓRICO ===== */
-.history-item {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--gray-border);
-    cursor: pointer;
-    font-size: 14px;
-}
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--gray-border);
+            font-size: 14px;
+        }
 
-/* ===== INSTITUCIONAL ===== */
-.institucional p {
-    font-size: 14px;
-    color: var(--gray-text);
-    line-height: 1.7;
-}
+        button {
+            align-self: end;
+            padding: 11px 20px;
+            background: var(--blue-light);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
-/* ===== RESPONSIVO ===== */
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* RESULTADOS */
+        .resultados {
+            margin-top: 28px;
+        }
+
+        .resultado-item {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--gray-border);
+        }
+
+        .resultado-item strong {
+            display: block;
+            font-size: 15px;
+        }
+
+        .resultado-item a {
+            color: var(--blue-light);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .resultado-item span {
+            display: block;
+            font-size: 12px;
+            color: var(--gray-text);
+            margin-top: 4px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 12px;
+            color: var(--gray-text);
+        }
+    </style>
 </head>
-
 <body>
 
 <header>
     <div class="header-container">
-        <img src="/logo.png" class="logo" alt="Buscador de Equivalências OEM">
+        <img src="logo.png" alt="Buscador de Equivalências OEM" class="logo">
         <div class="header-title">Buscador de Equivalências OEM</div>
     </div>
 </header>
 
-<div class="container">
+<main>
+    <div class="card">
+        <h1>Consulta de Referências</h1>
 
-<div class="card institucional">
-<h3>Sobre a Plataforma</h3>
-<p>
-Este site foi desenvolvido para auxiliar profissionais na busca por referências OEM
-e equivalências disponíveis publicamente na internet, organizando informações técnicas
-de forma clara e objetiva.
-</p>
-<p>
-As informações apresentadas são obtidas a partir de fontes abertas e devem ser
-sempre validadas junto ao fabricante ou fornecedor oficial.
-</p>
-</div>
+        <div class="form-grid">
+            <div>
+                <label for="marca">Marca</label>
+                <input id="marca" placeholder="Ex: Volkswagen">
+            </div>
 
-<div class="card">
-<div class="form-grid">
-    <div>
-        <label>Marca</label>
-        <input id="marca" placeholder="Ex: Volkswagen, Mercedes-Benz">
+            <div>
+                <label for="ref">Referência</label>
+                <input id="ref" placeholder="Ex: 2S0145863">
+            </div>
+
+            <button id="buscar">Buscar</button>
+        </div>
+
+        <div class="resultados" id="resultados"></div>
     </div>
-    <div>
-        <label>Referência</label>
-        <input id="referencia" placeholder="Ex: 2S0145863">
-    </div>
-    <button id="buscar">Buscar</button>
-</div>
+</main>
 
-<div class="options">
-    <label><input type="checkbox" id="somentePdf"> Somente PDFs</label>
-    <label><input type="checkbox" id="modoB2B"> Modo B2B</label>
-</div>
-</div>
-
-<div class="card">
-<h3>Resultados</h3>
-<div id="resultados"></div>
-</div>
-
-<div class="card">
-<h3>Histórico de Buscas</h3>
-<div id="historico"></div>
-</div>
-
-</div>
+<footer>
+    Plataforma desenvolvida para auxiliar na busca de referências OEM disponíveis publicamente na internet – uso B2B.
+</footer>
 
 <script>
-const historicoDiv = document.getElementById("historico");
-
-function salvarHistorico(marca, referencia) {
-    let hist = JSON.parse(localStorage.getItem("historico")) || [];
-    hist.unshift({ marca, referencia });
-    hist = hist.slice(0, 10);
-    localStorage.setItem("historico", JSON.stringify(hist));
-    renderHistorico();
-}
-
-function renderHistorico() {
-    historicoDiv.innerHTML = "";
-    const hist = JSON.parse(localStorage.getItem("historico")) || [];
-    hist.forEach(h => {
-        const div = document.createElement("div");
-        div.className = "history-item";
-        div.textContent = `${h.marca} - ${h.referencia}`;
-        div.onclick = () => {
-            document.getElementById("marca").value = h.marca;
-            document.getElementById("referencia").value = h.referencia;
-        };
-        historicoDiv.appendChild(div);
-    });
-}
-
-document.getElementById("buscar").onclick = async () => {
+document.getElementById("buscar").addEventListener("click", async () => {
     const marca = document.getElementById("marca").value.trim();
-    const referencia = document.getElementById("referencia").value.trim();
-    const somentePdf = document.getElementById("somentePdf").checked;
-    const modoB2B = document.getElementById("modoB2B").checked;
+    const ref = document.getElementById("ref").value.trim();
+    const resultadosDiv = document.getElementById("resultados");
 
-    if (!referencia) return alert("Informe a referência");
+    resultadosDiv.innerHTML = "Buscando...";
 
-    salvarHistorico(marca, referencia);
+    if (!ref) {
+        resultadosDiv.innerHTML = "Informe a referência.";
+        return;
+    }
 
-    const div = document.getElementById("resultados");
-    div.innerHTML = "Buscando...";
+    const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
+    const data = await response.json();
 
-    const res = await fetch(`/api/buscar?marca=${encodeURIComponent(marca)}&referencia=${encodeURIComponent(referencia)}&somentePdf=${somentePdf}`);
-    const data = await res.json();
-
-    div.innerHTML = "";
+    resultadosDiv.innerHTML = "";
 
     if (!data.resultados || data.resultados.length === 0) {
-        div.innerHTML = "<p>Nenhum resultado encontrado.</p>";
+        resultadosDiv.innerHTML = data.mensagem || "Nada encontrado.";
         return;
     }
 
     data.resultados.forEach(r => {
-        const el = document.createElement("div");
-        el.className = "result" + (r.equivalenciaExata ? " exata" : "");
-        el.innerHTML = `
-            <div class="result-title">${r.codigo}</div>
-            <div class="result-desc">${r.descricao || ""}</div>
-            <div class="meta">
-                <span class="badge ${r.tipo === "PDF" ? "pdf" : "html"}">${r.tipo}</span>
-                ${r.equivalenciaExata ? `<span class="badge exataBadge">Exata</span>` : ""}
-                <a href="${r.link}" target="_blank">${modoB2B ? "Ficha Técnica" : "Abrir"}</a>
-            </div>
+        const div = document.createElement("div");
+        div.className = "resultado-item";
+        div.innerHTML = `
+            <strong>${r.codigo}</strong>
+            <span>${r.titulo}</span>
+            <a href="${r.link}" target="_blank">${r.link}</a>
         `;
-        div.appendChild(el);
+        resultadosDiv.appendChild(div);
     });
-};
-
-renderHistorico();
+});
 </script>
 
 </body>
