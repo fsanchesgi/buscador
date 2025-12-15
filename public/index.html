@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <title>Buscador de Equivalências OEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
 
     <style>
         :root {
-            --primary: #0b3a32;
+            --primary: #02685f; /* Verde petróleo */
             --primary-light: #e6f2ef;
             --primary-hover: #145e52;
 
@@ -28,36 +26,28 @@
 
             --border-light: #d1d5db;
             --border-dark: #1f2937;
-
-            --original: #d1f7d6;
-            --equivalente: #fff4d6;
-            --pdf: #d6e0ff;
         }
 
         * { box-sizing: border-box; }
-
         body { margin: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--bg-light); color: var(--text-light); transition: background 0.3s, color 0.3s; }
         body.dark { background: var(--bg-dark); color: var(--text-dark); }
 
-        /* HEADER */
-        header { background-color: #02685f; border-bottom: 1px solid #c9e0db; }
+        header { background-color: var(--primary); border-bottom: 1px solid #c9e0db; }
         body.dark header { border-color: var(--border-dark); }
-
         .header-container { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
         .header-left { display: flex; align-items: center; gap: 18px; }
-        .logo { height: 46px; width: auto; display: block; }
-        .header-title { font-size: 20px; font-weight: 600; color: #ffffff; letter-spacing: 0.3px; }
+        .logo { height: 60px; width: auto; display: block; } /* Ajuste do tamanho do logo */
+        .header-title { font-size: 22px; font-weight: 600; color: #ffffff; letter-spacing: 0.3px; }
         .theme-toggle { cursor: pointer; font-size: 14px; font-weight: 600; color: #ffffff; }
 
-        /* MAIN */
         main { max-width: 1200px; margin: 36px auto; padding: 0 24px; }
-        .card { background: var(--card-light); border-radius: 10px; padding: 28px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); transition: background 0.3s; }
+        .card { background: var(--card-light); border-radius: 12px; padding: 28px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); margin-bottom: 16px; position: relative; transition: background 0.3s; }
         body.dark .card { background: var(--card-dark); }
+
         h1 { margin: 0 0 8px 0; font-size: 22px; font-weight: 600; }
-        .subtitle { font-size: 14px; color: var(--text-muted-light); margin-bottom: 22px; }
+        .subtitle { font-size: 14px; color: #ffffff; margin-bottom: 22px; }
         body.dark .subtitle { color: var(--text-muted-dark); }
 
-        /* FORMULÁRIO */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 18px; align-items: end; }
         label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
         input { width: 100%; padding: 11px 12px; border-radius: 6px; border: 1px solid var(--border-light); font-size: 14px; }
@@ -66,24 +56,23 @@
         button { padding: 12px 26px; background-color: var(--primary); color: #ffffff; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
         button:hover { background-color: var(--primary-hover); }
 
-        /* RESULTADOS */
         .resultados { margin-top: 32px; }
-        .resultado-item { padding: 18px; border-radius: 6px; margin-bottom: 12px; display: flex; flex-direction: column; }
-        .resultado-item strong { display: flex; align-items: center; font-size: 15px; margin-bottom: 4px; }
-        .resultado-item strong span.icon { margin-right: 6px; }
+        .resultado-item { padding: 18px; border-radius: 10px; margin-bottom: 12px; position: relative; display: flex; flex-direction: column; transition: transform 0.2s; }
+        .resultado-item:hover { transform: translateY(-2px); }
+        .resultado-item strong { font-size: 16px; margin-bottom: 6px; display: flex; align-items: center; }
+        .resultado-item strong span.icon { margin-right: 6px; font-size: 16px; }
         .resultado-item span { font-size: 13px; margin-bottom: 6px; color: var(--text-muted-light); }
         body.dark .resultado-item span { color: var(--text-muted-dark); }
-        .resultado-item a { font-size: 13px; color: var(--primary); text-decoration: none; }
+        .resultado-item a { font-size: 13px; color: var(--primary); text-decoration: none; word-break: break-all; }
 
-        .original { background-color: var(--original); }
-        .equivalente { background-color: var(--equivalente); }
-        .pdf { background-color: var(--pdf); }
+        .badge { position: absolute; top: 12px; right: 12px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; }
+        .original .badge { background-color: #34c759; }
+        .equivalente .badge { background-color: #ff9500; }
+        .pdf .badge { background-color: #007aff; }
 
-        /* FOOTER */
         footer { text-align: center; padding: 26px; font-size: 12px; color: var(--text-muted-light); }
         body.dark footer { color: var(--text-muted-dark); }
 
-        /* RESPONSIVO */
         @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } button { width: 100%; } }
     </style>
 </head>
@@ -127,54 +116,39 @@
 </footer>
 
 <script>
-/* DARK / LIGHT */
 function toggleTheme() {
     document.body.classList.toggle("dark");
     localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
 }
 (function() { if (localStorage.getItem("theme") === "dark") { document.body.classList.add("dark"); } })();
 
-/* BUSCA */
 document.getElementById("buscar").addEventListener("click", async () => {
     const marca = document.getElementById("marca").value.trim();
     const ref = document.getElementById("ref").value.trim();
     const resultadosDiv = document.getElementById("resultados");
 
     resultadosDiv.innerHTML = "Buscando...";
-
-    if (!ref) {
-        resultadosDiv.innerHTML = "Informe a referência.";
-        return;
-    }
+    if (!ref) { resultadosDiv.innerHTML = "Informe a referência."; return; }
 
     try {
         const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
         const data = await response.json();
 
         resultadosDiv.innerHTML = "";
-
-        if (!data.resultados || data.resultados.length === 0) {
-            resultadosDiv.innerHTML = data.mensagem || "Nada encontrado.";
-            return;
-        }
+        if (!data.resultados || data.resultados.length === 0) { resultadosDiv.innerHTML = data.mensagem || "Nada encontrado."; return; }
 
         data.resultados.forEach(r => {
             const div = document.createElement("div");
             div.className = "resultado-item";
 
-            let icon = "";
-            if (r.codigo.toLowerCase().includes("pdf")) { 
-                div.classList.add("pdf");
-                icon = "📄";
-            } else if (r.tipo === "original") { 
-                div.classList.add("original");
-                icon = "🔹";
-            } else { 
-                div.classList.add("equivalente");
-                icon = "⚡";
-            }
+            let tipo = r.tipo || "equivalente";
+            let icon = "⚡";
+            if (r.codigo.toLowerCase().includes("pdf")) { tipo = "pdf"; icon = "📄"; }
+            else if (tipo === "original") { icon = "🔹"; }
+            div.classList.add(tipo);
 
             div.innerHTML = `
+                <span class="badge">${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</span>
                 <strong><span class="icon">${icon}</span>${r.codigo}</strong>
                 <span>${r.titulo}</span>
                 <a href="${r.link}" target="_blank">${r.link}</a>
@@ -186,7 +160,6 @@ document.getElementById("buscar").addEventListener("click", async () => {
     }
 });
 
-/* ANO AUTOMÁTICO */
 document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
