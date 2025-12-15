@@ -1,60 +1,100 @@
-// server.js — MODO DIAGNÓSTICO DEFINITIVO
 import express from "express";
 import fetch from "node-fetch";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-dotenv.config();
+import cors from "cors";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.SERPAPI_KEY;
-
-console.log("🔑 SERPAPI_KEY existe?", !!API_KEY);
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "public")));
+app.use(cors());
 app.use(express.json());
 
-app.get("/api/buscar", async (req, res) => {
-    try {
-        const { marca = "", referencia = "" } = req.query;
+const SERPAPI_KEY = process.env.SERPAPI_KEY;
 
-        console.log("📥 QUERY RECEBIDA:", req.query);
+// ===============================
+// Utils
+// ===============================
+function normalizarReferencia(ref) {
+  return ref.replace(/[^\w]/g, "").toLowerCase();
+}
 
-        if (!referencia) {
-            return res.json({
-                ok: false,
-                mensagem: "Referência não informada"
-            });
-        }
+function contemReferencia(texto, refNorm) {
+  if (!texto) return false;
+  return normalizarReferencia(texto).includes(refNorm);
+}
 
-        const query = `${marca} ${referencia}`.trim();
-        const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+// ===============================
+// Rota de busca (MODO B)
+// ===============================
+app.get("/buscar", async (req, res) => {
+  try {
+    const { marca = "", referencia } = req.query;
 
-        console.log("🌐 URL:", url);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        console.log("📦 CHAVES RETORNADAS:", Object.keys(data));
-        console.log("📊 organic_results:", data.organic_results?.length || 0);
-
-        // 🚨 DEVOLVE TUDO, SEM FILTRO
-        res.json({
-            ok: true,
-            query,
-            serpapi_raw: data
-        });
-
-    } catch (err) {
-        console.error("❌ ERRO:", err);
-        res.status(500).json({ erro: "Erro interno" });
+    if (!referencia) {
+      return res.status(400).json({ ok: false, error: "Referência é obrigatória" });
     }
+
+    const refNormalizada = normalizarReferencia(referencia);
+
+    // 🔹 FORÇAR BUSCA APENAS PELA REFERÊNCIA
+    const query = `"${referencia}"`;
+
+    const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
+      query
+    )}&api_key=${SERPAPI_KEY}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.organic_results || data.organic_results.length === 0) {
+      return res.json({
+        ok: true,
+        original: [],
+        equivalentes: [],
+        message: "Nada encontrado",
+      });
+    }
+
+    const original = [];
+    const equivalentes = [];
+
+    data.organic_results.forEach((item) => {
+      const textoCompleto = `
+        ${item.title || ""}
+        ${item.snippet || ""}
+        ${item.link || ""}
+      `;
+
+      // ✔ Match EXATO da referência
+      if (contemReferencia(textoCompleto, refNormalizada)) {
+        const registro = {
+          titulo: item.title,
+          link: item.link,
+          descricao: item.snippet,
+          origem: item.source || "Web",
+        };
+
+        // 🔥 Se também contém a marca → ORIGINAL
+        if (marca && textoCompleto.toLowerCase().includes(marca.toLowerCase())) {
+          original.push(registro);
+        } else {
+          equivalentes.push(registro);
+        }
+      }
+    });
+
+    return res.json({
+      ok: true,
+      query: referencia,
+      marca,
+      original,
+      equivalentes,
+    });
+  } catch (error) {
+    console.error("Erro na busca:", error);
+    res.status(500).json({ ok: false, error: "Erro interno no servidor" });
+  }
 });
 
+// ===============================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
