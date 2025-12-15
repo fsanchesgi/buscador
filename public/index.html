@@ -9,12 +9,28 @@
     <link rel="icon" type="image/png" href="favicon.png">
 
     <style>
+        /* ===============================
+           IDENTIDADE VISUAL OEM
+        =============================== */
         :root {
-            --blue-dark: #0a1f44;
-            --blue-light: #123a78;
-            --gray-bg: #f4f6f8;
-            --gray-border: #d1d5db;
-            --gray-text: #4b5563;
+            --primary: #0b3a32;
+            --primary-light: #e6f2ef;
+            --primary-hover: #145e52;
+
+            --bg-light: #f6f8f7;
+            --bg-dark: #0f172a;
+
+            --card-light: #ffffff;
+            --card-dark: #111827;
+
+            --text-light: #1f2937;
+            --text-dark: #e5e7eb;
+
+            --text-muted-light: #6b7280;
+            --text-muted-dark: #9ca3af;
+
+            --border-light: #d1d5db;
+            --border-dark: #1f2937;
         }
 
         * {
@@ -23,128 +39,226 @@
 
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: var(--gray-bg);
-            color: #111827;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* HEADER */
+        body.dark {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* ===============================
+           HEADER
+        =============================== */
         header {
-            background-color: #0b3a32 !important;
-            width: 100%;
+            background-color: var(--primary-light);
+            border-bottom: 1px solid #c9e0db;
+        }
+
+        body.dark header {
+            background-color: #020617;
+            border-color: var(--border-dark);
         }
 
         .header-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 14px 24px;
+            padding: 16px 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
         }
 
         .logo {
-            height: 48px;
+            height: 46px;
             width: auto;
             display: block;
-            background: transparent;
         }
 
         .header-title {
-            color: #ffffff;
             font-size: 20px;
             font-weight: 600;
-            letter-spacing: 0.4px;
+            color: var(--primary);
+            letter-spacing: 0.3px;
         }
 
-        /* MAIN */
+        body.dark .header-title {
+            color: #ffffff;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        body.dark .theme-toggle {
+            color: #ffffff;
+        }
+
+        /* ===============================
+           MAIN
+        =============================== */
         main {
             max-width: 1200px;
-            margin: 32px auto;
+            margin: 36px auto;
             padding: 0 24px;
         }
 
         .card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            background: var(--card-light);
+            border-radius: 10px;
+            padding: 28px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            transition: background 0.3s;
+        }
+
+        body.dark .card {
+            background: var(--card-dark);
         }
 
         h1 {
-            margin-top: 0;
+            margin: 0 0 8px 0;
             font-size: 22px;
+            font-weight: 600;
         }
 
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted-light);
+            margin-bottom: 22px;
+        }
+
+        body.dark .subtitle {
+            color: var(--text-muted-dark);
+        }
+
+        /* ===============================
+           FORMULÁRIO
+        =============================== */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr auto;
-            gap: 16px;
-            margin-top: 16px;
+            gap: 18px;
+            align-items: end;
         }
 
         label {
             font-size: 13px;
             font-weight: 600;
-            color: var(--gray-text);
+            margin-bottom: 6px;
+            display: block;
         }
 
         input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 11px 12px;
             border-radius: 6px;
-            border: 1px solid var(--gray-border);
+            border: 1px solid var(--border-light);
             font-size: 14px;
         }
 
+        body.dark input {
+            background: #020617;
+            color: #ffffff;
+            border-color: var(--border-dark);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
         button {
-            align-self: end;
-            padding: 11px 20px;
-            background: var(--blue-light);
-            color: #fff;
+            padding: 12px 26px;
+            background-color: var(--primary);
+            color: #ffffff;
             border: none;
             border-radius: 6px;
             font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         button:hover {
-            opacity: 0.9;
+            background-color: var(--primary-hover);
         }
 
-        /* RESULTADOS */
+        /* ===============================
+           RESULTADOS
+        =============================== */
         .resultados {
-            margin-top: 28px;
+            margin-top: 32px;
         }
 
         .resultado-item {
-            padding: 14px 0;
-            border-bottom: 1px solid var(--gray-border);
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        body.dark .resultado-item {
+            border-color: var(--border-dark);
         }
 
         .resultado-item strong {
             display: block;
             font-size: 15px;
-        }
-
-        .resultado-item a {
-            color: var(--blue-light);
-            text-decoration: none;
-            font-size: 13px;
+            margin-bottom: 4px;
         }
 
         .resultado-item span {
             display: block;
-            font-size: 12px;
-            color: var(--gray-text);
-            margin-top: 4px;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text-muted-light);
         }
 
+        body.dark .resultado-item span {
+            color: var(--text-muted-dark);
+        }
+
+        .resultado-item a {
+            font-size: 13px;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* ===============================
+           FOOTER
+        =============================== */
         footer {
             text-align: center;
-            padding: 24px;
+            padding: 26px;
             font-size: 12px;
-            color: var(--gray-text);
+            color: var(--text-muted-light);
+        }
+
+        body.dark footer {
+            color: var(--text-muted-dark);
+        }
+
+        /* ===============================
+           RESPONSIVO
+        =============================== */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -152,14 +266,20 @@
 
 <header>
     <div class="header-container">
-        <img src="logo.png" alt="Buscador de Equivalências OEM" class="logo">
-        <div class="header-title">Buscador de Equivalências OEM</div>
+        <div class="header-left">
+            <img src="logo.png" alt="Buscador de Equivalências OEM" class="logo">
+            <div class="header-title">Buscador de Equivalências OEM</div>
+        </div>
+        <div class="theme-toggle" onclick="toggleTheme()">🌙 / ☀️</div>
     </div>
 </header>
 
 <main>
     <div class="card">
         <h1>Consulta de Referências</h1>
+        <div class="subtitle">
+            Plataforma B2B para auxílio na identificação de equivalências OEM disponíveis publicamente na internet.
+        </div>
 
         <div class="form-grid">
             <div>
@@ -180,10 +300,30 @@
 </main>
 
 <footer>
-    Plataforma desenvolvida para auxiliar na busca de referências OEM disponíveis publicamente na internet – uso B2B.
+    Buscador de Equivalências OEM • © <span id="year"></span> • Versão 1.0.0
 </footer>
 
 <script>
+/* ===============================
+   DARK / LIGHT
+=============================== */
+function toggleTheme() {
+    document.body.classList.toggle("dark");
+    localStorage.setItem(
+        "theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+    );
+}
+
+(function () {
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+    }
+})();
+
+/* ===============================
+   BUSCA
+=============================== */
 document.getElementById("buscar").addEventListener("click", async () => {
     const marca = document.getElementById("marca").value.trim();
     const ref = document.getElementById("ref").value.trim();
@@ -196,27 +336,36 @@ document.getElementById("buscar").addEventListener("click", async () => {
         return;
     }
 
-    const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
-    const data = await response.json();
+    try {
+        const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
+        const data = await response.json();
 
-    resultadosDiv.innerHTML = "";
+        resultadosDiv.innerHTML = "";
 
-    if (!data.resultados || data.resultados.length === 0) {
-        resultadosDiv.innerHTML = data.mensagem || "Nada encontrado.";
-        return;
+        if (!data.resultados || data.resultados.length === 0) {
+            resultadosDiv.innerHTML = data.mensagem || "Nada encontrado.";
+            return;
+        }
+
+        data.resultados.forEach(r => {
+            const div = document.createElement("div");
+            div.className = "resultado-item";
+            div.innerHTML = `
+                <strong>${r.codigo}</strong>
+                <span>${r.titulo}</span>
+                <a href="${r.link}" target="_blank">${r.link}</a>
+            `;
+            resultadosDiv.appendChild(div);
+        });
+    } catch (e) {
+        resultadosDiv.innerHTML = "Erro ao realizar a busca.";
     }
-
-    data.resultados.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "resultado-item";
-        div.innerHTML = `
-            <strong>${r.codigo}</strong>
-            <span>${r.titulo}</span>
-            <a href="${r.link}" target="_blank">${r.link}</a>
-        `;
-        resultadosDiv.appendChild(div);
-    });
 });
+
+/* ===============================
+   ANO AUTOMÁTICO
+=============================== */
+document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
 </body>
