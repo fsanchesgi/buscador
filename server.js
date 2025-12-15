@@ -1,99 +1,129 @@
+// server.js
 import express from "express";
 import fetch from "node-fetch";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.SERPAPI_KEY;
 
-// ================================
-// CACHE EM MEMÓRIA
-// ================================
-const cache = {};
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutos
-
-function setCache(key, data) {
-  cache[key] = {
-    timestamp: Date.now(),
-    data,
-  };
+// Debug da chave
+if (!API_KEY) {
+    console.error("❌ ERRO: A chave da SerpAPI não está definida");
+} else {
+    console.log("✅ SerpAPI KEY carregada com sucesso");
 }
 
-function getCache(key) {
-  const cached = cache[key];
-  if (!cached) return null;
-  if (Date.now() - cached.timestamp > CACHE_TTL) {
-    delete cache[key];
-    return null;
-  }
-  return cached.data;
+// Caminho para arquivos estáticos
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
+
+// ===============================
+// CACHE EM MEMÓRIA (5 MINUTOS)
+// ===============================
+const cache = new Map(); // chave: referencia+marca, valor: { data, timestamp }
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+function normalizeRef(ref) {
+    return ref.toUpperCase().replace(/[\s.\-"]/g, "");
 }
 
-// ================================
-// FUNÇÃO DE BUSCA HÍBRIDA
-// ================================
-async function buscarReferencia(ref, marca) {
-  const refClean = ref.replace(/[\s.-]/g, ""); // remove espaços, pontos, hífen
-  const cacheKey = `${marca}:${refClean}`;
-  const cachedData = getCache(cacheKey);
-  if (cachedData) return cachedData;
-
-  const resultados = {
-    originais: [],
-    equivalentes: [],
-    pdfs: [],
-  };
-
-  // Pesquisa exata usando SerpAPI (ou Google Search)
-  const serpapiKey = process.env.SERPAPI_KEY;
-  const query = `${marca} "${ref}"`;
-  const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${serpapiKey}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (data.organic_results) {
-    data.organic_results.forEach((item) => {
-      const codigo = item.title.match(/\d[\d.-]*/g)?.join("") || ref;
-      const titulo = item.title;
-      const link = item.link;
-
-      const itemObj = { codigo, titulo, link };
-
-      if (link.endsWith(".pdf")) {
-        resultados.pdfs.push(itemObj);
-      } else if (codigo.replace(/[\s.-]/g, "") === refClean) {
-        resultados.originais.push(itemObj);
-      } else if (codigo.replace(/[\s.-]/g, "").includes(refClean)) {
-        resultados.equivalentes.push(itemObj);
-      }
-    });
-  }
-
-  setCache(cacheKey, resultados);
-  return resultados;
-}
-
-// ================================
+// ===============================
 // ROTA DE BUSCA
-// ================================
+// ===============================
 app.get("/api/buscar", async (req, res) => {
-  const ref = req.query.referencia;
-  const marca = req.query.marca || "";
+    try {
+        const referencia = req.query.referencia;
+        const marca = req.query.marca || "";
 
-  if (!ref) return res.json({ resultados: null, mensagem: "Informe a referência." });
+        if (!referencia) {
+            return res.json({ resultados: [], mensagem: "Referência não informada" });
+        }
 
-  try {
-    const resultados = await buscarReferencia(ref, marca);
-    res.json({ resultados });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ resultados: null, mensagem: "Erro ao realizar a busca." });
-  }
+        const queryKey = `${normalizeRef(referencia)}|${marca.toUpperCase()}`;
+
+        // Verificar cache
+        if (cache.has(queryKey)) {
+            const cached = cache.get(queryKey);
+            if (Date.now() - cached.timestamp < CACHE_DURATION) {
+                console.log("♻️ Retornando do cache:", queryKey);
+                return res.json(cached.data);
+            }
+        }
+
+        // Consulta SerpAPI
+        const query = `${referencia} ${marca}`.trim();
+        const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+
+        console.log(`🔎 Buscando: ${query}`);
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.error) {
+            return res.status(400).json({ resultados: [], erro: data.error });
+        }
+
+        // ===============================
+        // EXTRAI RESULTADOS ORIGINAIS, EQUIVALENTES E PDFS
+        // ===============================
+        let originais = [];
+        let equivalentes = [];
+        let pdfs = [];
+
+        const refNorm = normalizeRef(referencia);
+
+        if (data.organic_results && data.organic_results.length > 0) {
+            data.organic_results.forEach(r => {
+                const titleNorm = normalizeRef(r.title || "");
+                const snippetNorm = normalizeRef(r.snippet || "");
+
+                const isPDF = r.link && r.link.toLowerCase().endsWith(".pdf");
+
+                const resultObj = {
+                    codigo: r.title || r.snippet || "",
+                    titulo: r.snippet || "",
+                    link: r.link || "",
+                    marca: marca,
+                    site: r.source || ""
+                };
+
+                if (isPDF) {
+                    pdfs.push(resultObj);
+                } else if (titleNorm.includes(refNorm) || snippetNorm.includes(refNorm)) {
+                    if (titleNorm === refNorm || snippetNorm === refNorm) {
+                        originais.push(resultObj); // exato
+                    } else {
+                        equivalentes.push(resultObj); // contém a referência
+                    }
+                }
+            });
+        }
+
+        // Ordenar: originais > equivalentes > PDFs
+        const resultados = [...originais, ...equivalentes, ...pdfs];
+
+        const retorno = { resultados };
+
+        // Salvar no cache
+        cache.set(queryKey, { data: retorno, timestamp: Date.now() });
+
+        res.json(retorno);
+
+    } catch (error) {
+        console.error("❌ Erro interno no servidor:", error);
+        res.status(500).json({ resultados: [], erro: "Erro interno no servidor" });
+    }
 });
 
-// ================================
-// SERVIR FRONT-END
-// ================================
-app.use(express.static("public"));
-
-// ================================
-app.listen(PORT, () => console.log(`Server rodando na porta ${PORT}`));
+// ===============================
+// INICIAR SERVIDOR
+// ===============================
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+});
