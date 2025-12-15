@@ -13,8 +13,8 @@
            VARIÁVEIS DE COR E IDENTIDADE
         =============================== */
         :root {
-            --primary: #115d5d; /* Verde petróleo mais escuro */
-            --primary-light: #e3f2f1; /* Cabeçalho claro */
+            --primary: #115d5d; /* Verde petróleo */
+            --primary-light: #e6f2f1; /* Cabeçalho claro */
             --primary-hover: #0b3a32;
             --bg-light: #f9fafb;
             --bg-dark: #0f172a;
@@ -79,7 +79,7 @@
 
         .header-title {
             font-size: 22px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--primary);
         }
 
@@ -230,6 +230,12 @@
             word-break: break-all;
         }
 
+        h2 {
+            font-size: 18px;
+            margin: 24px 0 12px 0;
+            color: var(--primary);
+        }
+
         /* ===============================
            FOOTER
         =============================== */
@@ -335,7 +341,6 @@ document.getElementById("buscar").addEventListener("click", async () => {
             if(items.length === 0) return;
             const blockTitle = document.createElement("h2");
             blockTitle.textContent = title;
-            blockTitle.style.marginTop = "24px";
             resultadosDiv.appendChild(blockTitle);
 
             items.forEach(r => {
