@@ -4,163 +4,331 @@
     <meta charset="UTF-8">
     <title>Buscador de Equivalências OEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plataforma B2B para busca de equivalências OEM. Encontre referências originais e equivalentes de forma rápida e confiável.">
     <link rel="icon" type="image/png" href="favicon.png">
 
     <style>
+        /* ===============================
+           VARIÁVEIS DE COR E TIPOGRAFIA
+        =============================== */
         :root {
-            --primary: #02685f; /* Verde petróleo */
+            --primary: #0b3a32;           /* verde petróleo */
             --primary-light: #e6f2ef;
             --primary-hover: #145e52;
-
             --bg-light: #f6f8f7;
             --bg-dark: #0f172a;
-
             --card-light: #ffffff;
             --card-dark: #111827;
-
             --text-light: #1f2937;
             --text-dark: #e5e7eb;
-
             --text-muted-light: #6b7280;
             --text-muted-dark: #9ca3af;
-
             --border-light: #d1d5db;
             --border-dark: #1f2937;
+            --button-radius: 6px;
         }
 
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--bg-light); color: var(--text-light); transition: background 0.3s, color 0.3s; }
-        body.dark { background: var(--bg-dark); color: var(--text-dark); }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        header { background-color: var(--primary); border-bottom: 1px solid #c9e0db; }
-        body.dark header { border-color: var(--border-dark); }
-        .header-container { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .header-left { display: flex; align-items: center; gap: 18px; }
-        .logo { height: 60px; width: auto; display: block; } /* Ajuste do tamanho do logo */
-        .header-title { font-size: 22px; font-weight: 600; color: #ffffff; letter-spacing: 0.3px; }
-        .theme-toggle { cursor: pointer; font-size: 14px; font-weight: 600; color: #ffffff; }
+        body {
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
 
-        main { max-width: 1200px; margin: 36px auto; padding: 0 24px; }
-        .card { background: var(--card-light); border-radius: 12px; padding: 28px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); margin-bottom: 16px; position: relative; transition: background 0.3s; }
-        body.dark .card { background: var(--card-dark); }
+        body.dark {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
 
-        h1 { margin: 0 0 8px 0; font-size: 22px; font-weight: 600; }
-        .subtitle { font-size: 14px; color: #ffffff; margin-bottom: 22px; }
-        body.dark .subtitle { color: var(--text-muted-dark); }
+        /* ===============================
+           HEADER / NAV
+        =============================== */
+        header {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 18px; align-items: end; }
-        label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
-        input { width: 100%; padding: 11px 12px; border-radius: 6px; border: 1px solid var(--border-light); font-size: 14px; }
-        body.dark input { background: #020617; color: #ffffff; border-color: var(--border-dark); }
-        input:focus { outline: none; border-color: var(--primary); }
-        button { padding: 12px 26px; background-color: var(--primary); color: #ffffff; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+        header .logo {
+            height: 60px;
+            width: auto;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 24px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 24px;
+        }
+
+        /* ===============================
+           HERO
+        =============================== */
+        .hero {
+            background: var(--primary-light);
+            padding: 80px 24px 60px 24px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: var(--text-muted-light);
+            margin-bottom: 32px;
+        }
+
+        /* ===============================
+           BUSCA PRINCIPAL
+        =============================== */
+        .search-card {
+            max-width: 900px;
+            margin: 0 auto 60px auto;
+            padding: 32px;
+            background: var(--card-light);
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        }
+
+        body.dark .search-card { background: var(--card-dark); }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 16px;
+            align-items: end;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--button-radius);
+            border: 1px solid var(--border-light);
+            font-size: 14px;
+        }
+
+        body.dark input { border-color: var(--border-dark); background: #020617; color: #fff; }
+
+        button {
+            padding: 12px 26px;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--button-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
         button:hover { background-color: var(--primary-hover); }
 
+        /* ===============================
+           SEÇÕES DE BENEFÍCIOS / INFO
+        =============================== */
+        .section {
+            max-width: 1200px;
+            margin: 0 auto 60px auto;
+            padding: 0 24px;
+        }
+
+        .section h2 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+            gap: 24px;
+            text-align: center;
+        }
+
+        .benefit-card {
+            padding: 24px;
+            background: var(--card-light);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: background 0.3s;
+        }
+
+        body.dark .benefit-card { background: var(--card-dark); }
+
+        .benefit-card h3 { margin-bottom: 12px; font-size: 18px; }
+        .benefit-card p { font-size: 14px; color: var(--text-muted-light); }
+        body.dark .benefit-card p { color: var(--text-muted-dark); }
+
+        /* ===============================
+           RESULTADOS
+        =============================== */
         .resultados { margin-top: 32px; }
-        .resultado-item { padding: 18px; border-radius: 10px; margin-bottom: 12px; position: relative; display: flex; flex-direction: column; transition: transform 0.2s; }
-        .resultado-item:hover { transform: translateY(-2px); }
-        .resultado-item strong { font-size: 16px; margin-bottom: 6px; display: flex; align-items: center; }
-        .resultado-item strong span.icon { margin-right: 6px; font-size: 16px; }
-        .resultado-item span { font-size: 13px; margin-bottom: 6px; color: var(--text-muted-light); }
+        .resultado-item { padding: 18px 0; border-bottom: 1px solid var(--border-light); }
+        body.dark .resultado-item { border-color: var(--border-dark); }
+        .resultado-item strong { display:block; font-size: 15px; margin-bottom: 4px; }
+        .resultado-item span { display:block; font-size:13px; margin-bottom:6px; color: var(--text-muted-light); }
         body.dark .resultado-item span { color: var(--text-muted-dark); }
-        .resultado-item a { font-size: 13px; color: var(--primary); text-decoration: none; word-break: break-all; }
+        .resultado-item a { font-size:13px; color: var(--primary); text-decoration:none; }
 
-        .badge { position: absolute; top: 12px; right: 12px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; }
-        .original .badge { background-color: #34c759; }
-        .equivalente .badge { background-color: #ff9500; }
-        .pdf .badge { background-color: #007aff; }
-
-        footer { text-align: center; padding: 26px; font-size: 12px; color: var(--text-muted-light); }
+        /* ===============================
+           FOOTER
+        =============================== */
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            font-size: 12px;
+            color: var(--text-muted-light);
+        }
         body.dark footer { color: var(--text-muted-dark); }
 
-        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } button { width: 100%; } }
+        @media (max-width:768px){
+            .form-grid { grid-template-columns: 1fr; }
+            button { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-container">
-        <div class="header-left">
-            <img src="logo.png" alt="Buscador de Equivalências OEM" class="logo">
-            <div class="header-title">Buscador de Equivalências OEM</div>
-        </div>
-        <div class="theme-toggle" onclick="toggleTheme()">🌙 / ☀️</div>
+    <div style="display:flex;align-items:center;">
+        <img src="logo.png" alt="Buscador de Equivalências OEM" class="logo">
+        <nav>
+            <a href="#hero">Home</a>
+            <a href="#benefits">Benefícios</a>
+            <a href="#search">Busca</a>
+            <a href="#contact">Contato</a>
+        </nav>
     </div>
+    <div class="theme-toggle" onclick="toggleTheme()">🌙 / ☀️</div>
 </header>
 
-<main>
-    <div class="card">
-        <h1>Consulta de Referências</h1>
-        <div class="subtitle">
-            Plataforma B2B para auxílio na identificação de equivalências OEM disponíveis publicamente na internet.
-        </div>
+<section class="hero" id="hero">
+    <h1>Buscador de Equivalências OEM</h1>
+    <p>Encontre referências originais e equivalentes de forma rápida, confiável e segura para aplicações B2B.</p>
+</section>
 
-        <div class="form-grid">
-            <div>
-                <label for="marca">Marca</label>
-                <input id="marca" placeholder="Ex: Volkswagen">
-            </div>
-            <div>
-                <label for="ref">Referência</label>
-                <input id="ref" placeholder="Ex: 2S0145863">
-            </div>
-            <button id="buscar">Buscar</button>
+<section class="section search-card" id="search">
+    <h2>Consulta de Referências</h2>
+    <div class="form-grid">
+        <div>
+            <label for="marca">Marca</label>
+            <input id="marca" placeholder="Ex: Bosch">
         </div>
-
-        <div class="resultados" id="resultados"></div>
+        <div>
+            <label for="ref">Referência</label>
+            <input id="ref" placeholder="Ex: 9.511.089.001">
+        </div>
+        <button id="buscar">Buscar</button>
     </div>
-</main>
+    <div class="resultados" id="resultados"></div>
+</section>
+
+<section class="section" id="benefits">
+    <h2>Benefícios da Plataforma</h2>
+    <div class="benefits">
+        <div class="benefit-card">
+            <h3>Busca Precisa</h3>
+            <p>Localize referências originais e equivalentes diretamente, evitando erros de compatibilidade.</p>
+        </div>
+        <div class="benefit-card">
+            <h3>Documentação PDF</h3>
+            <p>Detecta fichas técnicas e PDFs relacionados às referências, facilitando consulta técnica.</p>
+        </div>
+        <div class="benefit-card">
+            <h3>Versão B2B</h3>
+            <p>Ferramenta otimizada para empresas, permitindo consultas rápidas e confiáveis em ambiente corporativo.</p>
+        </div>
+    </div>
+</section>
 
 <footer>
     Buscador de Equivalências OEM • © <span id="year"></span> • Versão 1.0.0
 </footer>
 
 <script>
+/* ===============================
+   DARK / LIGHT
+=============================== */
 function toggleTheme() {
     document.body.classList.toggle("dark");
     localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
 }
-(function() { if (localStorage.getItem("theme") === "dark") { document.body.classList.add("dark"); } })();
 
+if(localStorage.getItem("theme")==="dark"){ document.body.classList.add("dark"); }
+
+/* ===============================
+   BUSCA
+=============================== */
 document.getElementById("buscar").addEventListener("click", async () => {
     const marca = document.getElementById("marca").value.trim();
     const ref = document.getElementById("ref").value.trim();
     const resultadosDiv = document.getElementById("resultados");
-
     resultadosDiv.innerHTML = "Buscando...";
-    if (!ref) { resultadosDiv.innerHTML = "Informe a referência."; return; }
 
-    try {
+    if(!ref){ resultadosDiv.innerHTML="Informe a referência."; return; }
+
+    try{
         const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
         const data = await response.json();
-
         resultadosDiv.innerHTML = "";
-        if (!data.resultados || data.resultados.length === 0) { resultadosDiv.innerHTML = data.mensagem || "Nada encontrado."; return; }
 
-        data.resultados.forEach(r => {
-            const div = document.createElement("div");
-            div.className = "resultado-item";
+        if(!data.resultados || data.resultados.length===0){
+            resultadosDiv.innerHTML = data.mensagem || "Nada encontrado.";
+            return;
+        }
 
-            let tipo = r.tipo || "equivalente";
-            let icon = "⚡";
-            if (r.codigo.toLowerCase().includes("pdf")) { tipo = "pdf"; icon = "📄"; }
-            else if (tipo === "original") { icon = "🔹"; }
-            div.classList.add(tipo);
+        // Exibir Original / Equivalente / PDFs separados
+        const originais = data.resultados.filter(r => r.tipo==="original");
+        const equivalentes = data.resultados.filter(r => r.tipo==="equivalente");
+        const pdfs = data.resultados.filter(r => r.tipo==="pdf");
 
-            div.innerHTML = `
-                <span class="badge">${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</span>
-                <strong><span class="icon">${icon}</span>${r.codigo}</strong>
-                <span>${r.titulo}</span>
-                <a href="${r.link}" target="_blank">${r.link}</a>
-            `;
-            resultadosDiv.appendChild(div);
-        });
-    } catch (e) {
-        resultadosDiv.innerHTML = "Erro ao realizar a busca.";
+        const renderBlock = (titulo, array) => {
+            if(array.length===0) return;
+            const block = document.createElement("div");
+            block.innerHTML=`<h3>${titulo}</h3>`;
+            array.forEach(r=>{
+                const div = document.createElement("div");
+                div.className="resultado-item";
+                div.innerHTML=`<strong>${r.codigo}</strong><span>${r.titulo}</span><a href="${r.link}" target="_blank">${r.link}</a>`;
+                block.appendChild(div);
+            });
+            resultadosDiv.appendChild(block);
+        }
+
+        renderBlock("Originais", originais);
+        renderBlock("Equivalentes", equivalentes);
+        renderBlock("PDFs", pdfs);
+
+    }catch(e){
+        resultadosDiv.innerHTML="Erro ao realizar a busca.";
     }
 });
 
-document.getElementById("year").textContent = new Date().getFullYear();
+/* ===============================
+   ANO AUTOMÁTICO
+=============================== */
+document.getElementById("year").textContent=new Date().getFullYear();
 </script>
 
 </body>
