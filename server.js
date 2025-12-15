@@ -24,6 +24,15 @@ const cache = new Map();
 // Função para normalizar referência
 const normalize = (str) => str.toLowerCase().replace(/[\s.-]/g, "");
 
+// Função para verificar se um resultado é válido (desprezar spam, anúncios, strings curtas)
+const isValidResult = (title, snippet) => {
+    if (!title || title.length < 3) return false;
+    if (!snippet || snippet.length < 5) return false;
+    const forbidden = ["anúncio", "ads", "publicidade", "sponsored"];
+    const combined = (title + " " + snippet).toLowerCase();
+    return !forbidden.some(f => combined.includes(f));
+};
+
 // Rota de busca
 app.get("/api/buscar", async (req, res) => {
     try {
@@ -57,6 +66,8 @@ app.get("/api/buscar", async (req, res) => {
 
         if (data.organic_results && data.organic_results.length > 0) {
             data.organic_results.forEach(r => {
+                if (!isValidResult(r.title, r.snippet)) return; // ignora resultados irrelevantes
+
                 const titleNorm = normalize(r.title || "");
                 const snippetNorm = normalize(r.snippet || "");
 
