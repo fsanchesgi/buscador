@@ -54,15 +54,18 @@ app.get("/api/buscar", async (req, res) => {
             });
         }
 
+        // 🔥 COLETAR DADOS DE TODAS AS FONTES POSSÍVEIS
         const organic = data.organic_results || [];
+        const related = data.related_questions || [];
+        const answerBox = data.answer_box ? [data.answer_box] : [];
+        const knowledge = data.knowledge_graph ? [data.knowledge_graph] : [];
 
-        if (organic.length === 0) {
-            return res.json({
-                original: [],
-                equivalentes: [],
-                mensagem: "Nada encontrado"
-            });
-        }
+        const todosResultados = [
+            ...organic,
+            ...related,
+            ...answerBox,
+            ...knowledge
+        ];
 
         // Normalização OEM
         const refNormalizada = referencia.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
@@ -70,11 +73,11 @@ app.get("/api/buscar", async (req, res) => {
         const original = [];
         const equivalentes = [];
 
-        organic.forEach(r => {
-            const title = r.title || "";
-            const snippet = r.snippet || "";
-            const link = r.link || "";
-            const site = r.source || "";
+        todosResultados.forEach(r => {
+            const title = r.title || r.name || "";
+            const snippet = r.snippet || r.answer || r.description || "";
+            const link = r.link || r.url || "";
+            const site = r.source || r.website || "";
 
             const texto = `${title} ${snippet}`.toLowerCase();
             const textoNormalizado = texto.replace(/[^a-zA-Z0-9]/g, "");
@@ -83,31 +86,27 @@ app.get("/api/buscar", async (req, res) => {
             const matchMarca = marca && texto.includes(marca);
 
             const item = {
-                codigo: title,
+                codigo: title || referencia,
                 titulo: snippet,
                 link,
                 site
             };
 
-            // ORIGINAL: referência exata (marca é bônus, não obrigatória)
-            if (matchExato) {
+            if (matchExato && matchMarca) {
                 original.push(item);
-            }
-            // EQUIVALENTE: correlação parcial
-            else if (
-                texto.includes(referencia.toLowerCase().slice(0, 5)) ||
-                texto.includes(marca)
-            ) {
+            } else if (matchExato) {
+                original.push(item);
+            } else {
                 equivalentes.push(item);
             }
         });
 
-        // GARANTIA DE RETORNO
+        // 🔒 GARANTIA ABSOLUTA DE RETORNO
         if (original.length === 0 && equivalentes.length === 0) {
             organic.slice(0, 10).forEach(r => {
                 equivalentes.push({
-                    codigo: r.title || "",
-                    titulo: r.snippet || "",
+                    codigo: r.title || referencia,
+                    titulo: r.snippet || "Resultado relacionado",
                     link: r.link || "",
                     site: r.source || ""
                 });
