@@ -1,146 +1,260 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buscador OEM</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Buscador de Equivalências OEM</title>
 
 <style>
+:root {
+    --primary: #0b3c5d;
+    --secondary: #1d70b8;
+    --light: #f5f7fa;
+    --dark: #1f2933;
+    --border: #d9dde3;
+    --success: #0a8754;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    padding: 20px;
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--light);
+    color: var(--dark);
 }
-.container {
-    max-width: 1000px;
-    margin: auto;
-}
-h1 {
-    color: #222;
-}
-.search-box {
-    background: #fff;
-    padding: 20px;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.1);
-    margin-bottom: 20px;
-}
-label {
-    font-weight: bold;
-}
-input {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0 15px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-}
-.options {
-    margin-bottom: 15px;
-}
-button {
-    background: #0056b3;
+
+/* Header */
+header {
+    background: var(--primary);
     color: #fff;
-    padding: 10px 25px;
+    padding: 20px 30px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/* Container */
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* Card */
+.card {
+    background: #fff;
+    border-radius: 6px;
+    padding: 25px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+/* Form */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 15px;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-size: 13px;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+input {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--secondary);
+}
+
+button {
+    padding: 11px 20px;
+    background: var(--secondary);
     border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
     border-radius: 4px;
     cursor: pointer;
 }
+
 button:hover {
-    background: #003f88;
+    background: #155a96;
 }
-.result {
-    background: #fff;
+
+/* Options */
+.options {
+    margin-top: 15px;
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+}
+
+/* Results */
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.results-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.result-item {
+    border: 1px solid var(--border);
+    border-radius: 5px;
     padding: 15px;
-    border-radius: 6px;
     margin-bottom: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.1);
-    border-left: 5px solid transparent;
+    background: #fff;
 }
-.result.exata {
-    border-left: 5px solid #198754;
+
+.result-item.exata {
+    border-left: 5px solid var(--success);
+    background: #f2fbf7;
 }
-.codigo {
-    font-weight: bold;
-    font-size: 16px;
+
+.result-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 5px;
 }
+
+.result-desc {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.result-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 13px;
+}
+
 .badge {
-    display: inline-block;
-    padding: 4px 8px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
     font-size: 12px;
-    border-radius: 4px;
-    margin-top: 6px;
 }
+
 .badge.pdf {
-    background: #dc3545;
-    color: #fff;
+    background: #e8f0ff;
+    color: #1d4ed8;
 }
+
 .badge.html {
-    background: #0d6efd;
-    color: #fff;
+    background: #f0f0f0;
+    color: #333;
 }
+
 .badge.exata {
-    background: #198754;
-    color: #fff;
+    background: #d1fae5;
+    color: #065f46;
 }
-.site {
-    font-size: 12px;
-    color: #555;
-}
+
 a {
-    color: #0056b3;
+    color: var(--secondary);
     text-decoration: none;
+    font-weight: 600;
 }
+
 a:hover {
     text-decoration: underline;
+}
+
+/* Responsive */
+@media(max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 </head>
 
 <body>
-<div class="container">
+
+<header>
     <h1>Buscador de Equivalências OEM</h1>
+</header>
 
-    <div class="search-box">
-        <label>Marca</label>
-        <input id="marca" placeholder="Insira a marca!">
+<div class="container">
 
-        <label>Referência</label>
-        <input id="ref" placeholder="Insira a referência!">
+    <!-- FORM -->
+    <div class="card">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Marca</label>
+                <input id="marca" placeholder="Ex: Volkswagen, Mercedes, Ford">
+            </div>
 
-        <div class="options">
-            <input type="checkbox" id="somentePdf">
-            <label for="somentePdf">Mostrar somente fichas técnicas (PDF)</label>
+            <div class="form-group">
+                <label>Referência</label>
+                <input id="referencia" placeholder="Ex: 2S0145863">
+            </div>
+
+            <button id="buscarBtn">Buscar</button>
         </div>
 
-        <button onclick="buscar()">Buscar</button>
+        <div class="options">
+            <label>
+                <input type="checkbox" id="somentePdf">
+                Somente PDFs
+            </label>
+        </div>
     </div>
 
-    <div id="resultados"></div>
+    <!-- RESULTS -->
+    <div class="card">
+        <div class="results-header">
+            <h2>Resultados</h2>
+        </div>
+
+        <div id="resultados"></div>
+    </div>
+
 </div>
 
 <script>
-async function buscar() {
+document.getElementById("buscarBtn").addEventListener("click", async () => {
     const marca = document.getElementById("marca").value.trim();
-    const ref = document.getElementById("ref").value.trim();
+    const referencia = document.getElementById("referencia").value.trim();
     const somentePdf = document.getElementById("somentePdf").checked;
 
-    const resultadosDiv = document.getElementById("resultados");
-    resultadosDiv.innerHTML = "🔎 Buscando resultados...";
-
-    if (!ref) {
+    if (!referencia) {
         alert("Informe a referência");
         return;
     }
 
-    let url = `/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`;
+    const resultadosDiv = document.getElementById("resultados");
+    resultadosDiv.innerHTML = "Buscando...";
 
-    if (somentePdf) {
-        url += "&somentePdf=true";
-    }
+    const url = `/api/buscar?marca=${encodeURIComponent(marca)}&referencia=${encodeURIComponent(referencia)}&somentePdf=${somentePdf}`;
 
-    const response = await fetch(url);
-    const data = await response.json();
+    const res = await fetch(url);
+    const data = await res.json();
 
     resultadosDiv.innerHTML = "";
 
@@ -151,25 +265,22 @@ async function buscar() {
 
     data.resultados.forEach(r => {
         const div = document.createElement("div");
-        div.className = "result" + (r.equivalenciaExata ? " exata" : "");
+        div.className = "result-item" + (r.equivalenciaExata ? " exata" : "");
 
         div.innerHTML = `
-            <div class="codigo">🔢 ${r.codigo}</div>
-            <div>${r.descricao || "Descrição não disponível"}</div>
-
-            ${r.equivalenciaExata ? '<span class="badge exata">⭐ Equivalência exata</span><br>' : ''}
-
-            <span class="badge ${r.tipo === "PDF" ? "pdf" : "html"}">
-                ${r.tipo === "PDF" ? "📄 Ficha técnica (PDF)" : "🌐 Página Web"}
-            </span><br><br>
-
-            <a href="${r.link}" target="_blank">🔗 Acessar</a><br>
-            <span class="site">${r.site}</span>
+            <div class="result-title">${r.codigo}</div>
+            <div class="result-desc">${r.descricao || ""}</div>
+            <div class="result-meta">
+                <span class="badge ${r.tipo === "PDF" ? "pdf" : "html"}">${r.tipo}</span>
+                ${r.equivalenciaExata ? `<span class="badge exata">Equivalência Exata</span>` : ""}
+                <a href="${r.link}" target="_blank">Acessar</a>
+            </div>
         `;
 
         resultadosDiv.appendChild(div);
     });
-}
+});
 </script>
+
 </body>
 </html>
