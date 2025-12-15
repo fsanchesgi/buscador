@@ -1,100 +1,147 @@
 import express from "express";
 import fetch from "node-fetch";
-import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.SERPAPI_KEY;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-const SERPAPI_KEY = process.env.SERPAPI_KEY;
+// ===============================
+// Utils OEM
+// ===============================
+const normalizeRef = (ref = "") =>
+  ref
+    .toUpperCase()
+    .replace(/[\s\-\.\/]/g, "")
+    .trim();
+
+const isPDF = (link = "") =>
+  link.toLowerCase().endsWith(".pdf") ||
+  link.toLowerCase().includes("scribd") ||
+  link.toLowerCase().includes("catalog");
+
+// Extrai possível código do texto
+const extractCode = (text, refNorm) => {
+  if (!text) return "";
+  const clean = text.toUpperCase();
+  if (clean.includes(refNorm)) return refNorm;
+  return "";
+};
 
 // ===============================
-// Utils
+// API BUSCA
 // ===============================
-function normalizarReferencia(ref) {
-  return ref.replace(/[^\w]/g, "").toLowerCase();
-}
-
-function contemReferencia(texto, refNorm) {
-  if (!texto) return false;
-  return normalizarReferencia(texto).includes(refNorm);
-}
-
-// ===============================
-// Rota de busca (MODO B)
-// ===============================
-app.get("/buscar", async (req, res) => {
+app.get("/api/buscar", async (req, res) => {
   try {
-    const { marca = "", referencia } = req.query;
+    const marca = (req.query.marca || "").trim();
+    const referencia = (req.query.referencia || "").trim();
 
     if (!referencia) {
-      return res.status(400).json({ ok: false, error: "Referência é obrigatória" });
+      return res.json({
+        original: [],
+        equivalentes: [],
+        pdfs: [],
+        mensagem: "Referência não informada"
+      });
     }
 
-    const refNormalizada = normalizarReferencia(referencia);
-
-    // 🔹 FORÇAR BUSCA APENAS PELA REFERÊNCIA
-    const query = `"${referencia}"`;
+    const refNorm = normalizeRef(referencia);
+    const query = `${referencia} ${marca}`.trim();
 
     const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
       query
-    )}&api_key=${SERPAPI_KEY}`;
+    )}&api_key=${API_KEY}`;
+
+    console.log("🔎 Busca:", query);
 
     const response = await fetch(url);
     const data = await response.json();
 
-    if (!data.organic_results || data.organic_results.length === 0) {
+    if (!data.organic_results) {
       return res.json({
-        ok: true,
         original: [],
         equivalentes: [],
-        message: "Nada encontrado",
+        pdfs: [],
+        mensagem: "Nada encontrado"
       });
     }
 
     const original = [];
     const equivalentes = [];
+    const pdfs = [];
 
-    data.organic_results.forEach((item) => {
-      const textoCompleto = `
-        ${item.title || ""}
-        ${item.snippet || ""}
-        ${item.link || ""}
-      `;
+    data.organic_results.forEach((r) => {
+      const title = r.title || "";
+      const snippet = r.snippet || "";
+      const link = r.link || "";
 
-      // ✔ Match EXATO da referência
-      if (contemReferencia(textoCompleto, refNormalizada)) {
-        const registro = {
-          titulo: item.title,
-          link: item.link,
-          descricao: item.snippet,
-          origem: item.source || "Web",
-        };
+      const combined = `${title} ${snippet}`.toUpperCase();
+      const foundNorm = normalizeRef(combined);
 
-        // 🔥 Se também contém a marca → ORIGINAL
-        if (marca && textoCompleto.toLowerCase().includes(marca.toLowerCase())) {
-          original.push(registro);
-        } else {
-          equivalentes.push(registro);
-        }
+      const matchExact =
+        foundNorm.includes(refNorm) &&
+        marca &&
+        combined.includes(marca.toUpperCase());
+
+      const matchEquivalent = foundNorm.includes(refNorm);
+
+      const item = {
+        titulo: title,
+        descricao: snippet,
+        link,
+        site: r.source || "",
+        marca_detectada: marca || "Não informada",
+        codigo: refNorm
+      };
+
+      if (isPDF(link)) {
+        pdfs.push(item);
+      } else if (matchExact) {
+        original.push(item);
+      } else if (matchEquivalent) {
+        equivalentes.push(item);
       }
     });
 
-    return res.json({
-      ok: true,
-      query: referencia,
-      marca,
-      original,
-      equivalentes,
+    // Remove duplicados
+    const unique = (arr) =>
+      Array.from(new Map(arr.map(i => [i.link, i])).values());
+
+    res.json({
+      original: unique(original),
+      equivalentes: unique(equivalentes),
+      pdfs: unique(pdfs)
     });
+
   } catch (error) {
-    console.error("Erro na busca:", error);
-    res.status(500).json({ ok: false, error: "Erro interno no servidor" });
+    console.error("❌ Erro:", error);
+    res.status(500).json({
+      original: [],
+      equivalentes: [],
+      pdfs: [],
+      erro: "Erro interno no servidor"
+    });
   }
 });
 
 // ===============================
-const PORT = process.env.PORT || 3000;
+// Rota raiz (FIX Cannot GET /)
+// ===============================
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ===============================
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
