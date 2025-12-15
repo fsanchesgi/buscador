@@ -23,28 +23,27 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-/* ==========================
-   FUNÇÕES UTILITÁRIAS OEM
-========================== */
-
 function normalizeReference(ref) {
-    const clean = ref.replace(/[^0-9]/g, "");
-    const hyphen = ref.replace(/\./g, "-");
+    const clean = ref.replace(/[^0-9]/g, "");  // Remove tudo que não for número
+    const hyphen = ref.replace(/\./g, "-");  // Troca ponto por hífen
     return {
         original: ref,
-        clean,
-        hyphen
+        clean,  // Ex: 9511089005
+        hyphen  // Ex: 9-511-089-005
     };
+}
+
+function compareReferences(ref1, ref2) {
+    return normalizeReference(ref1).clean === normalizeReference(ref2).clean;
 }
 
 function containsReference(text, refVariants) {
     if (!text) return false;
     const t = text.toLowerCase();
-
     return (
-        t.includes(refVariants.original.toLowerCase()) ||
-        t.includes(refVariants.clean) ||
-        t.includes(refVariants.hyphen.toLowerCase())
+        compareReferences(t, refVariants.original.toLowerCase()) ||
+        compareReferences(t, refVariants.clean) ||
+        compareReferences(t, refVariants.hyphen.toLowerCase())
     );
 }
 
@@ -58,9 +57,9 @@ function detectBrand(text, brand) {
     return text.toLowerCase().includes(brand.toLowerCase());
 }
 
-/* ==========================
-   ROTA DE BUSCA
-========================== */
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 app.get("/api/buscar", async (req, res) => {
     try {
@@ -72,8 +71,6 @@ app.get("/api/buscar", async (req, res) => {
         }
 
         const refVariants = normalizeReference(referencia);
-
-        // 🔎 A referência SEMPRE vem primeiro
         const query = `${referencia} ${marca}`.trim();
 
         console.log("📥 Query recebida:", { referencia, marca });
@@ -101,7 +98,6 @@ app.get("/api/buscar", async (req, res) => {
 
             const text = `${title} ${snippet}`;
 
-            // ❌ DESCARTA se NÃO tiver referência
             if (!containsReference(text, refVariants)) return;
 
             const isPDF = detectPDF(link);
@@ -115,13 +111,11 @@ app.get("/api/buscar", async (req, res) => {
                 site: r.source || "",
             };
 
-            // 🥇 ORIGINAL
             if (hasBrand && !isPDF) {
                 original.push({ ...item, tipo: "original", score: 100 });
                 return;
             }
 
-            // 📄 PDF (OEM ou catálogo)
             if (isPDF) {
                 pdfs.push({
                     ...item,
@@ -132,7 +126,6 @@ app.get("/api/buscar", async (req, res) => {
                 return;
             }
 
-            // 🔁 EQUIVALENTE (outra marca citando EXPLICITAMENTE a ref)
             equivalentes.push({
                 ...item,
                 tipo: "equivalente",
@@ -140,12 +133,10 @@ app.get("/api/buscar", async (req, res) => {
             });
         });
 
-        // 🔃 Ordenação interna
         original.sort((a, b) => b.score - a.score);
         pdfs.sort((a, b) => b.score - a.score);
         equivalentes.sort((a, b) => b.score - a.score);
 
-        // 🔁 Compatibilidade com front atual
         const resultados = [...original, ...pdfs, ...equivalentes];
 
         if (resultados.length === 0) {
@@ -166,10 +157,6 @@ app.get("/api/buscar", async (req, res) => {
         res.status(500).json({ resultados: [], erro: "Erro interno no servidor" });
     }
 });
-
-/* ==========================
-   START
-========================== */
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
