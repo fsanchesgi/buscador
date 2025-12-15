@@ -176,6 +176,7 @@
         }
 
         button {
+            position: relative;
             padding: 13px 28px;
             background-color: var(--primary);
             color: #ffffff;
@@ -190,6 +191,23 @@
         button:hover {
             background-color: var(--primary-hover);
         }
+
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -9px 0 0 -9px;
+            display: none;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* ===============================
            RESULTADOS
@@ -208,18 +226,19 @@
             border-radius: 6px;
             margin-bottom: 12px;
             transition: background 0.2s;
+            border: 1px solid var(--border-light);
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         .resultado-item strong {
-            display: block;
             font-size: 15px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .resultado-item span {
-            display: block;
             font-size: 13px;
-            margin-bottom: 8px;
             color: var(--text-muted-light);
         }
 
@@ -230,13 +249,13 @@
             word-break: break-word;
         }
 
-        body.dark .resultado-item span {
-            color: var(--text-muted-dark);
-        }
-
         .original { background-color: var(--original-bg); }
         .equivalente { background-color: var(--equivalente-bg); }
         .pdf { background-color: var(--pdf-bg); }
+
+        body.dark .resultado-item span {
+            color: var(--text-muted-dark);
+        }
 
         h2 {
             font-size: 18px;
@@ -298,7 +317,9 @@
                 <input id="ref" placeholder="Ex: 9.511.089.001">
             </div>
 
-            <button id="buscar">Buscar</button>
+            <button id="buscar">Buscar
+                <div class="spinner" id="spinner"></div>
+            </button>
         </div>
 
         <div class="resultados" id="resultados"></div>
@@ -306,7 +327,7 @@
 </main>
 
 <footer>
-    Buscador de Equivalências OEM • © <span id="year"></span> • Versão 1.0.0 • <a href="#">Política de Privacidade</a>
+    Buscador de Equivalências OEM • © <span id="year"></span> • Versão 1.0.0
 </footer>
 
 <script>
@@ -322,9 +343,12 @@ document.getElementById("buscar").addEventListener("click", async () => {
     const marca = document.getElementById("marca").value.trim();
     const ref = document.getElementById("ref").value.trim();
     const resultadosDiv = document.getElementById("resultados");
-    resultadosDiv.innerHTML = "Buscando...";
+    const spinner = document.getElementById("spinner");
+    resultadosDiv.innerHTML = "";
+    spinner.style.display = "block";
 
     if (!ref) {
+        spinner.style.display = "none";
         resultadosDiv.innerHTML = "Informe a referência.";
         return;
     }
@@ -332,7 +356,7 @@ document.getElementById("buscar").addEventListener("click", async () => {
     try {
         const response = await fetch(`/api/buscar?referencia=${encodeURIComponent(ref)}&marca=${encodeURIComponent(marca)}`);
         const data = await response.json();
-        resultadosDiv.innerHTML = "";
+        spinner.style.display = "none";
 
         if (!data.resultados || data.resultados.length === 0) {
             resultadosDiv.innerHTML = data.mensagem || "Nenhuma referência encontrada.";
@@ -344,12 +368,12 @@ document.getElementById("buscar").addEventListener("click", async () => {
         const equivalentes = data.resultados.filter(r => r.tipo === "equivalente");
         const pdfs = data.resultados.filter(r => r.tipo === "pdf");
 
-        function renderBlock(title, items, cssClass) {
+        function renderBlock(title, items, cssClass, icon) {
             if(items.length === 0) return;
             const section = document.createElement("div");
             section.className = "resultado-section";
             const blockTitle = document.createElement("h2");
-            blockTitle.textContent = `${title} (${items.length})`;
+            blockTitle.textContent = `${icon} ${title} (${items.length})`;
             section.appendChild(blockTitle);
 
             items.forEach(r => {
@@ -364,11 +388,12 @@ document.getElementById("buscar").addEventListener("click", async () => {
             resultadosDiv.appendChild(section);
         }
 
-        renderBlock("Originais", originais, "original");
-        renderBlock("Equivalentes", equivalentes, "equivalente");
-        renderBlock("PDFs", pdfs, "pdf");
+        renderBlock("Originais", originais, "original", "🔹");
+        renderBlock("Equivalentes", equivalentes, "equivalente", "🔄");
+        renderBlock("PDFs", pdfs, "pdf", "📄");
 
     } catch (e) {
+        spinner.style.display = "none";
         resultadosDiv.innerHTML = "Erro ao realizar a busca.";
         console.error(e);
     }
